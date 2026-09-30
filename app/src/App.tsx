@@ -6,6 +6,7 @@ import { MapGlassPanel } from './components/MapGlassPanel';
 import { AppLanguage, AppScreen, FarmerProfile, CropItem } from './types';
 import { DEFAULT_FARMER_PROFILE, INITIAL_CROPS } from './data/mockData';
 import { LanguageModal } from './components/LanguageModal';
+import { BottomNav } from './components/BottomNav';
 
 // Screens
 import { SplashScreen } from './screens/SplashScreen';
@@ -34,7 +35,7 @@ export default function App() {
 }
 
 function ParamAppShell() {
-  const { prediction, dailyForecast, loading, currentCoords, setLocation, domainFallbackNote, requestLocation, gpsStatus } = useAgromet();
+  const { prediction, dailyForecast, loading, currentCoords, setLocation, domainFallbackNote, requestLocation } = useAgromet();
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
   const [windowWidth, setWindowWidth] = useState<number>(() =>
@@ -185,12 +186,6 @@ function ParamAppShell() {
             isMobile={isMobile}
           />
           {/* Temporary visible GPS debug chip (zIndex: 30, readable on phone without DevTools) */}
-          <div
-            className="fixed left-4 top-[72px] max-w-[48vw] md:max-w-md px-2.5 py-1.5 rounded-lg bg-black/90 text-emerald-400 font-mono text-[11px] leading-tight shadow-xl border border-neutral-700 pointer-events-auto select-all break-words"
-            style={{ zIndex: 30 }}
-          >
-            {gpsStatus}
-          </div>
         </>
       )}
 
@@ -204,7 +199,7 @@ function ParamAppShell() {
           bottom: 0,
           width: sheetOpen ? '100vw' : '100%',
           maxWidth: sheetOpen ? '100vw' : (isMobile ? '100%' : '430px'),
-          height: sheetOpen ? '100vh' : '140px',
+          height: sheetOpen ? '100vh' : '72px',
           zIndex: 10,
           borderRadius: sheetOpen ? 0 : '24px 24px 0 0',
           background: 'rgba(255, 255, 255, 0.92)',
@@ -302,9 +297,15 @@ function ParamAppShell() {
 
             {/* Scrollable PARAM column: all 16 screens + bottom nav */}
             <div
-              className="flex-1 overflow-y-auto overscroll-contain relative min-h-0"
-              style={{ transform: 'translateZ(0)' }}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain relative min-h-0"
+              // style={{ transform: 'translateZ(0)' }}
             >
+              <BottomNav
+                currentScreen={currentScreen}
+                onNavigate={navigateTo}
+                language={language}
+                 alertCount={3}
+              />
         {/* Render Screen according to currentScreen */}
         {currentScreen === 'splash' && (
           <HomeScreen

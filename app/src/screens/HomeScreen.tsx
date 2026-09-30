@@ -2,7 +2,7 @@ import { useAgromet } from '../context/AgrometContext';
 import React, { useState } from 'react';
 import { AppLanguage, AppScreen, FarmerProfile } from '../types';
 import { Header } from '../components/Header';
-import { BottomNav } from '../components/BottomNav';
+// import { BottomNav } from '../components/BottomNav';
 import { CropScannerModal } from '../components/CropScannerModal';
 import { MandiRatesModal } from '../components/MandiRatesModal';
 import { playSpeech } from '../utils/audio';
@@ -57,7 +57,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-surface flex flex-col justify-between overflow-x-hidden text-on-surface">
+    <div className="relative w-full min-h-full bg-surface flex flex-col justify-between overflow-x-hidden text-on-surface">
       {/* Header */}
       <Header
         title={isMr ? 'PARAM | परम' : 'PARAM'}
@@ -71,16 +71,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {/* Main Body */}
-      <main className="flex-1 w-full pt-16 pb-24">
+      <main className="flex-1 min-h-0 w-full pt-16 pb-16 pb=24 overflow-y-auto">
         {/* Top Hero Landscape Banner */}
         <div className="relative w-full overflow-hidden mb-2">
           {/* Background image & gradient */}
           <div className="absolute inset-0 z-0">
-            <img
-              alt="Maharashtra landscape"
-              className="w-full h-full object-cover object-center"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1VYXGhrza3RdSj1FIVs2Hg6S0EoI-xgT9VmH5xJkruKTmceZx3BlAuk0wgMPL3DdwOet2cPOCNG3Cps3L058eT0bou7ypUmXBpEdFfh0OdWgYlEpSmwcjzig2Ih2O0CfcPvOom_6LpjeKpZ_npJnBDutL_scqJJ9N8-tth5iUL2OqJjCIbiyCsFa6O6tXmGCg_RGKhbRq2_YyvYTUx1GuIgYFlB5A0SRGcDRFDBOgyxL10PGvdriiXEqQg"
-            />
             <div className="absolute inset-0 bg-gradient-to-t from-surface via-primary/75 to-primary/90"></div>
           </div>
 
@@ -206,7 +201,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </span>
                 <h2 className="font-headline-sm text-headline-sm text-primary flex items-center gap-1">
                   <span>{isMr ? 'आजचा शेती सल्ला' : "Today's Farm Advisory"}</span>
-                  <span className="text-on-tertiary-container">⭐</span>
+                  <span className="text-on-tertiary-container"></span>
                 </h2>
               </div>
 
@@ -512,7 +507,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </main>
 
       {/* Bottom Navigation */}
-      <BottomNav currentScreen="home" onNavigate={onNavigate} language={language} alertCount={3} />
+      {/* <BottomNav currentScreen="home" onNavigate={onNavigate} language={language} alertCount={3} /> */}
 
       {/* Leaf Scanner Modal */}
       <CropScannerModal
