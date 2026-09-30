@@ -1,0 +1,6 @@
+{
+  "name": "PARAM",
+  "description": "PARAM Agro Advisory App - Precision hyper-local weather forecast, stage-wise crop management, and farm advisories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

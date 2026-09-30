@@ -58,3 +58,18 @@ Thumbs.db
 
 # Demo outputs
 outputs/demo_flagship_downscaled.csv
+
+# ── Web, Node & Vercel Artifacts ─────────────────────────────────────────────
+node_modules/
+**/node_modules/
+.vercel/
+**/.vercel/
+app/dist/
+dist/
+app/.env.local
+.env.local
+.env*.local
+*.pem
+*.token
+*.key
+figs/
