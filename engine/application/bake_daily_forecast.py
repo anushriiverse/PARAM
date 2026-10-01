@@ -30,7 +30,6 @@ if str(RELEASE_DIR) not in sys.path:
 
 ROOT_DIR = RELEASE_DIR.parent
 from engine.deterministic.agronomic import calc_eto_hargreaves
-from engine.deterministic.soil_water import daily_soil_water_balance, compute_farmer_advisory
 
 
 def compute_ra_vector(lats_deg: np.ndarray, day_of_year: int) -> np.ndarray:
@@ -307,44 +306,11 @@ def bake_forecasts():
 
         all_7day_rows.append(df_lead)
 
-    # Multi-day Soil Water Balance Bucket Simulation across 7 days
-    n_villages = len(df_transfer)
-    rain_matrix = np.zeros((n_villages, 7), dtype=np.float64)
-    eto_matrix = np.zeros((n_villages, 7), dtype=np.float64)
-    for l_idx in range(7):
-        rain_matrix[:, l_idx] = all_7day_rows[l_idx]["rain_mm"].values
-        eto_matrix[:, l_idx] = all_7day_rows[l_idx]["eto_mm_day"].values
-
-    s_mat = np.zeros((n_villages, 7), dtype=np.float64)
-    d_mat = np.zeros((n_villages, 7), dtype=np.float64)
-    r_mat = np.zeros((n_villages, 7), dtype=np.float64)
-
-    for v_idx in range(n_villages):
-        s, d, r = daily_soil_water_balance(rain_matrix[v_idx], eto_matrix[v_idx])
-        s_mat[v_idx] = s
-        d_mat[v_idx] = d
-        r_mat[v_idx] = r
-
-    for l_idx in range(7):
-        all_7day_rows[l_idx]["soil_storage_mm"] = np.round(s_mat[:, l_idx], 2)
-        all_7day_rows[l_idx]["soil_deficit_mm"] = np.round(d_mat[:, l_idx], 2)
-        all_7day_rows[l_idx]["soil_runoff_mm"] = np.round(r_mat[:, l_idx], 2)
-        all_7day_rows[l_idx]["soil_storage_pct"] = np.round(s_mat[:, l_idx] / 100.0 * 100.0, 1)
-
     df_7day = pd.concat(all_7day_rows, ignore_index=True)
     out_7day_path = RELEASE_DIR / "outputs" / "village_forecast_7day.csv"
     df_7day.to_csv(out_7day_path, index=False)
     if ROOT_DIR != RELEASE_DIR and (ROOT_DIR / "outputs").exists():
         df_7day.to_csv(ROOT_DIR / "outputs" / "village_forecast_7day.csv", index=False)
-
-    # Update Day 1 served daily tables with real 7-day cumulative rainfall and agronomy fields
-    rain_7day_sum = np.round(np.sum(rain_matrix, axis=1), 2)
-    mean_eto = np.mean(eto_matrix, axis=1)
-    days_to_empty = np.where(mean_eto > 0, np.round(s_mat[:, 0] / mean_eto, 1), 99.9)
-    advisories = [
-        compute_farmer_advisory(s_mat[v, 0], rain_7day_sum[v], days_to_empty[v])
-        for v in range(n_villages)
-    ]
 
     for df_target in [df_phys, df_ml]:
         df_target["forecast_date"] = all_7day_rows[0]["forecast_date"].values
@@ -362,10 +328,6 @@ def bake_forecasts():
         df_target["tmin_c"] = all_7day_rows[0]["tmin_c"].values
         df_target["tmean_c"] = all_7day_rows[0]["tmean_c"].values
         df_target["eto_mm_day"] = all_7day_rows[0]["eto_mm_day"].values
-        df_target["soil_storage_pct"] = all_7day_rows[0]["soil_storage_pct"].values
-        df_target["days_to_empty"] = days_to_empty
-        df_target["rain_7day_sum_mm"] = rain_7day_sum
-        df_target["advisory"] = advisories
 
     df_phys.to_csv(RELEASE_DIR / "api" / "data" / "village_daily_physics.csv", index=False)
     df_phys.to_csv(RELEASE_DIR / "api" / "data" / "village_daily.csv", index=False)
