@@ -214,12 +214,29 @@ def bake_forecasts():
     t0_7d = time.perf_counter()
     print("\n[3/4] Generating Real 7-Day Forecast Product (outputs/village_forecast_7day.csv)...")
 
-    fc_json_path = RELEASE_DIR / "data" / "forecast_20261001.json"
-    if not fc_json_path.exists():
-        fc_json_path = ROOT_DIR / "data" / "forecast_20261001.json"
-    if not fc_json_path.exists():
-        fc_files = sorted(list((ROOT_DIR / "data").glob("forecast_*.json")), key=lambda p: p.stat().st_mtime, reverse=True)
-        fc_json_path = fc_files[0]
+    # Dynamic lookup of newest forecast_*.json by the first date inside it
+    seen_paths = set()
+    fc_candidates = []
+    for search_dir in [RELEASE_DIR / "data", ROOT_DIR / "data"]:
+        if search_dir.exists():
+            for p in search_dir.glob("forecast_*.json"):
+                if p.is_file() and not p.name.endswith("provenance.json"):
+                    rp = p.resolve()
+                    if rp in seen_paths:
+                        continue
+                    seen_paths.add(rp)
+                    try:
+                        with open(p, "r", encoding="utf-8") as _f:
+                            _data = json.load(_f)
+                            _first_date = _data[0]["daily"]["time"][0]
+                            fc_candidates.append((_first_date, p.stat().st_mtime, p))
+                    except Exception:
+                        pass
+    if not fc_candidates:
+        raise FileNotFoundError("No valid forecast_*.json driver files found in data directories.")
+    fc_candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    fc_json_path = fc_candidates[0][2]
+    print(f"      Selected driver file by newest internal date: {fc_json_path.name} (start_date={fc_candidates[0][0]})")
 
     with open(fc_json_path, "r", encoding="utf-8") as f:
         driver_data = json.load(f)
