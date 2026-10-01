@@ -124,7 +124,7 @@ t_s3 = time.time() - t0_s3
 # Extract forecast metadata
 sample_point = data_list[0]
 model_name = "ecmwf_ifs025"
-forecast_date = sample_point['daily']['time'][1] # Tomorrow's date
+forecast_date = sample_point['daily']['time'][0]  # First forecast date (Day 1)
 generation_time_ms = sample_point.get('generationtime_ms', None)
 date_tag = forecast_date.replace('-', '')
 

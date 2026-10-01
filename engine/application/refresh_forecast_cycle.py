@@ -41,9 +41,9 @@ with urllib.request.urlopen(req, timeout=30) as resp:
 fetch_duration = time.time() - t0
 print(f"Fetched {len(data_list)} points in {fetch_duration:.2f}s (HTTP {http_status}).")
 
-# Day 1 is tomorrow (index 1)
+# Day 1 is first forecast date (index 0)
 sample = data_list[0]
-forecast_date = sample['daily']['time'][1]
+forecast_date = sample['daily']['time'][0]
 gen_time_ms = sample.get('generationtime_ms')
 date_tag = forecast_date.replace('-', '')
 
