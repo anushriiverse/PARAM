@@ -1,0 +1,5 @@
+dataset,evaluation_target,station_name,station_id,variable,n_station_days,coarse_mae_c,coarse_bias_c,stn_coord_mae_c,stn_coord_bias_c,stn_coord_paired_diff_c,stn_coord_ci_lower_c,stn_coord_ci_upper_c,stn_coord_excludes_0,served_village_mae_c,served_village_bias_c,served_village_paired_diff_c,served_village_ci_lower_c,served_village_ci_upper_c,served_village_excludes_0
+ERA5 Reanalysis Reference,pooled_all_stations,Pooled (All 3),ALL_3,Tmax,1500,2.1059,-1.7657,1.8399,-1.39,-0.266,-0.3164,-0.2163,True,2.085,-1.644,-0.0208,-0.0554,0.0131,False
+ERA5 Reanalysis Reference,pooled_all_stations,Pooled (All 3),ALL_3,Tmin,1500,0.9003,0.2908,1.0551,0.6666,0.1548,0.1128,0.1966,True,0.9725,0.4126,0.0722,0.0438,0.1018,True
+ECMWF IFS Forecast Served,pooled_all_stations,Pooled (All 3),ALL_3,Tmax,605,2.502,-2.4276,2.1217,-2.0504,-0.3803,-0.4476,-0.3092,True,2.336,-2.2735,-0.1659,-0.2346,-0.0992,True
+ECMWF IFS Forecast Served,pooled_all_stations,Pooled (All 3),ALL_3,Tmin,605,1.0765,0.4266,1.1882,0.8039,0.1117,0.034,0.1855,True,1.2045,0.5807,0.128,0.0659,0.1933,True

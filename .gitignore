@@ -1,0 +1,75 @@
+# panchayat-weather-downscaling — .gitignore
+
+# ── Large data files excluded per P4 ────────────────────────────────────────
+data/*
+*.tif
+*.zarr
+*.npy
+*.npz
+*.nc
+*.h5
+*.hdf5
+
+# ── Whitelisted public caches and manifest ──────────────────────────────────
+!data/cache/
+data/cache/*
+!data/cache/provenance_manifest.json
+!data/cache/node_orography_grids.npz
+!data/cache/d2m_grid.npz
+!data/cache/in_window_daily_extremes.npz
+!data/cache/signed_village_results.json
+!data/cache/ghcn_daily/
+data/cache/ghcn_daily/*
+!data/cache/ghcn_daily/IN012131800_parsed.csv
+
+# ── Excluded outputs (too large or not for public release) ──────────────────
+outputs/daily_temperature_series.csv
+outputs/daily_station_validation_series.csv
+outputs/daily_village_temperature_series.csv
+outputs/figures/flagship_node_exhibit.svg
+
+# ── Credentials — NEVER commit these ────────────────────────────────────────
+.env
+*.env
+.netrc
+*.netrc
+*.pem
+*_key*
+*_secret*
+*credentials*.json
+*service_account*.json
+.cdsapirc
+
+# ── Python cache ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# ── Editors & OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Demo outputs
+outputs/demo_flagship_downscaled.csv
+
+# ── Web, Node & Vercel Artifacts ─────────────────────────────────────────────
+node_modules/
+**/node_modules/
+.vercel/
+**/.vercel/
+app/dist/
+dist/
+app/.env.local
+.env.local
+.env*.local
+*.pem
+*.token
+*.key
+figs/
