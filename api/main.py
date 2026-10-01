@@ -270,7 +270,8 @@ def forecast7(
             "gate_g": round(float(r["gate_g"]), 4),
             "effective_ratio": round(float(r["effective_ratio"]), 4),
             "inside_validated_band": bool(r["inside_validated_band"]),
-            "tmax_source": str(r["tmax_source"]) if "tmax_source" in r and not pd.isna(r["tmax_source"]) else ("physics" if not SERVE_ML_TEMPERATURE else "ml_corrected")
+            "tmax_source": str(r["tmax_source"]) if "tmax_source" in r and not pd.isna(r["tmax_source"]) else ("physics" if not SERVE_ML_TEMPERATURE else "ml_corrected"),
+            "ml_offset_tmax_c": round(float(r["ml_offset_tmax_c"]), 2) if "ml_offset_tmax_c" in r and not pd.isna(r["ml_offset_tmax_c"]) else 0.0
         })
 
     return {
@@ -339,7 +340,7 @@ def model_info():
             "served_tmax_source": "ml_corrected" if SERVE_ML_TEMPERATURE else "physics",
             "clamp_rule": "hard +/-2.0 C ceiling applied to hourly residuals and daily offsets",
             "revert_command": "Set SERVE_ML_TEMPERATURE = False in release/api/main.py",
-            "disclaimer": "Tmax: physics lapse-rate correction plus XGBoost residual (clamped +/-2.0 C); Tmin: physics only; ML accuracy measured offline on ERA5/analysis-quality input at 3 GHCN stations; 1-7 day forecast error not yet measured.",
-            "note": "Tmax: physics lapse-rate correction plus XGBoost residual (clamped +/-2.0 C); Tmin: physics only; ML accuracy measured offline on ERA5/analysis-quality input at 3 GHCN stations; 1-7 day forecast error not yet measured."
+            "disclaimer": "Tmax: physics lapse-rate correction plus XGBoost diurnal residual (clamped +/-2.0 C); Tmin: physics only; ML offsets derived per date from hourly ECMWF IFS (0.25 deg) forecast; 1-7 day operational forecast error is not yet measured.",
+            "note": "Offsets are derived from hourly ECMWF IFS (0.25 deg) forecasts evaluated per date via XGBoost residual model v2 with hard +/-2.0 C clamp; 1-7 day operational forecast error is not yet measured."
         }
     }

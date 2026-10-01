@@ -1,0 +1,26 @@
+{
+  "source_url": "https://api.open-meteo.com/v1/forecast",
+  "model": "ecmwf_ifs025",
+  "description": "ECMWF Integrated Forecasting System (IFS 0.25\u00b0)",
+  "forecast_date": "2026-10-01",
+  "point_count": 247,
+  "api_http_status": 200,
+  "api_generation_time_ms": 19.252419471740723,
+  "fetch_timestamp_utc": "2026-10-01T18:00:34.320267Z",
+  "lattice_bounds": {
+    "lat_min": 13.0,
+    "lat_max": 17.5,
+    "dlat": 0.25,
+    "lon_min": 73.5,
+    "lon_max": 76.5,
+    "dlon": 0.25
+  },
+  "variables": [
+    "precipitation_sum",
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "wind_direction_10m_dominant",
+    "wind_speed_10m_max",
+    "elevation"
+  ]
+}
