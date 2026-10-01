@@ -312,30 +312,71 @@ def bake_forecasts():
     if ROOT_DIR != RELEASE_DIR and (ROOT_DIR / "outputs").exists():
         df_7day.to_csv(ROOT_DIR / "outputs" / "village_forecast_7day.csv", index=False)
 
-    for df_target in [df_phys, df_ml]:
-        df_target["forecast_date"] = all_7day_rows[0]["forecast_date"].values
-        df_target["cell_precip_sum_mm"] = all_7day_rows[0]["cell_precip_sum_mm"].values
-        df_target["rain_ratio"] = all_7day_rows[0]["rain_ratio"].values
-        df_target["wind_dir_deg"] = all_7day_rows[0]["wind_dir_deg"].values
-        df_target["wind_speed_max_kmh"] = all_7day_rows[0]["wind_speed_max_kmh"].values
-        df_target["gate_g"] = all_7day_rows[0]["gate_g"].values
-        df_target["effective_ratio"] = all_7day_rows[0]["effective_ratio"].values
-        df_target["rain_mm"] = all_7day_rows[0]["rain_mm"].values
-        df_target["cell_tmax_c"] = all_7day_rows[0]["cell_tmax_c"].values
-        df_target["cell_tmin_c"] = all_7day_rows[0]["cell_tmin_c"].values
-        df_target["temp_offset_c"] = all_7day_rows[0]["temp_offset_c"].values
-        df_target["tmax_c"] = all_7day_rows[0]["tmax_c"].values
-        df_target["tmin_c"] = all_7day_rows[0]["tmin_c"].values
-        df_target["tmean_c"] = all_7day_rows[0]["tmean_c"].values
-        df_target["eto_mm_day"] = all_7day_rows[0]["eto_mm_day"].values
+    # Update Day 1 served daily tables from Lead 1
+    SERVE_ML_TEMPERATURE = True
 
+    # 1. Physics product
+    df_phys["forecast_date"] = all_7day_rows[0]["forecast_date"].values
+    df_phys["cell_precip_sum_mm"] = all_7day_rows[0]["cell_precip_sum_mm"].values
+    df_phys["rain_ratio"] = all_7day_rows[0]["rain_ratio"].values
+    df_phys["wind_dir_deg"] = all_7day_rows[0]["wind_dir_deg"].values
+    df_phys["wind_speed_max_kmh"] = all_7day_rows[0]["wind_speed_max_kmh"].values
+    df_phys["gate_g"] = all_7day_rows[0]["gate_g"].values
+    df_phys["effective_ratio"] = all_7day_rows[0]["effective_ratio"].values
+    df_phys["rain_mm"] = all_7day_rows[0]["rain_mm"].values
+    df_phys["cell_tmax_c"] = all_7day_rows[0]["cell_tmax_c"].values
+    df_phys["cell_tmin_c"] = all_7day_rows[0]["cell_tmin_c"].values
+    df_phys["temp_offset_c"] = all_7day_rows[0]["temp_offset_c"].values
+    df_phys["tmax_c"] = all_7day_rows[0]["tmax_c"].values
+    df_phys["tmin_c"] = all_7day_rows[0]["tmin_c"].values
+    df_phys["tmean_c"] = all_7day_rows[0]["tmean_c"].values
+    df_phys["eto_mm_day"] = all_7day_rows[0]["eto_mm_day"].values
+    df_phys["tmax_source"] = "physics"
+
+    # 2. ML product (Tmax corrected by ml_offset_tmax_c; Tmin and rain byte-identical to physics)
+    df_ml["forecast_date"] = all_7day_rows[0]["forecast_date"].values
+    df_ml["cell_precip_sum_mm"] = all_7day_rows[0]["cell_precip_sum_mm"].values
+    df_ml["rain_ratio"] = all_7day_rows[0]["rain_ratio"].values
+    df_ml["wind_dir_deg"] = all_7day_rows[0]["wind_dir_deg"].values
+    df_ml["wind_speed_max_kmh"] = all_7day_rows[0]["wind_speed_max_kmh"].values
+    df_ml["gate_g"] = all_7day_rows[0]["gate_g"].values
+    df_ml["effective_ratio"] = all_7day_rows[0]["effective_ratio"].values
+    df_ml["rain_mm"] = all_7day_rows[0]["rain_mm"].values
+    df_ml["cell_tmax_c"] = all_7day_rows[0]["cell_tmax_c"].values
+    df_ml["cell_tmin_c"] = all_7day_rows[0]["cell_tmin_c"].values
+    df_ml["temp_offset_c"] = all_7day_rows[0]["temp_offset_c"].values
+    # Tmax = physics tmax + ml_offset_tmax_c
+    df_ml["tmax_c"] = np.round(df_phys["tmax_c"] + df_ml["ml_offset_tmax_c"], 2)
+    # Tmin is strictly byte-identical to physics baseline
+    df_ml["tmin_c"] = df_phys["tmin_c"].copy()
+    df_ml["tmean_c"] = np.round((df_ml["tmax_c"] + df_ml["tmin_c"]) / 2.0, 2)
+    d_obj = datetime.strptime(str(df_ml["forecast_date"].iloc[0]), "%Y-%m-%d").date()
+    ra_vec = compute_ra_vector(df_ml["lat"].values, d_obj.timetuple().tm_yday)
+    df_ml["eto_mm_day"] = np.round(calc_eto_hargreaves(df_ml["tmin_c"].values, df_ml["tmax_c"].values, df_ml["tmean_c"].values, ra_vec), 2)
+    df_ml["tmax_source"] = "ml_corrected"
+    df_ml["ml_model_version"] = "v2"
+    df_ml["ml_applied_to"] = "tmax_only"
+    df_ml["clamp_limit_c"] = 2.0
+
+    # Strict byte-level assertions
+    assert np.all(df_ml["tmin_c"].values == df_phys["tmin_c"].values), "Tmin differs between ML and physics!"
+    assert np.all(df_ml["rain_mm"].values == df_phys["rain_mm"].values), "rain_mm differs between ML and physics!"
+
+    # Save physics fallback, fresh ML table, and active served table
     df_phys.to_csv(RELEASE_DIR / "api" / "data" / "village_daily_physics.csv", index=False)
-    df_phys.to_csv(RELEASE_DIR / "api" / "data" / "village_daily.csv", index=False)
     df_ml.to_csv(RELEASE_DIR / "api" / "data" / "village_daily_ml.csv", index=False)
+    if SERVE_ML_TEMPERATURE:
+        df_ml.to_csv(RELEASE_DIR / "api" / "data" / "village_daily.csv", index=False)
+    else:
+        df_phys.to_csv(RELEASE_DIR / "api" / "data" / "village_daily.csv", index=False)
+
     if ROOT_DIR != RELEASE_DIR:
         df_phys.to_csv(ROOT_DIR / "api" / "data" / "village_daily_physics.csv", index=False)
-        df_phys.to_csv(ROOT_DIR / "api" / "data" / "village_daily.csv", index=False)
         df_ml.to_csv(ROOT_DIR / "api" / "data" / "village_daily_ml.csv", index=False)
+        if SERVE_ML_TEMPERATURE:
+            df_ml.to_csv(ROOT_DIR / "api" / "data" / "village_daily.csv", index=False)
+        else:
+            df_phys.to_csv(ROOT_DIR / "api" / "data" / "village_daily.csv", index=False)
 
     t_7d_done = time.perf_counter() - t0_7d
     print(f"      Saved real 7-day forecast: {out_7day_path}")

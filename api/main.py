@@ -38,7 +38,7 @@ df["state"] = df["state"].astype(str)
 df["inside_validated_band"] = df["inside_validated_band"].astype(bool)
 
 # Serving configuration flag: set to False for instant 1-line mid-demo revert to physics-only
-SERVE_ML_TEMPERATURE: bool = False
+SERVE_ML_TEMPERATURE: bool = True
 
 if SERVE_ML_TEMPERATURE:
     DAILY_DATA_PATH = BASE_DIR / "data" / "village_daily_ml.csv"
@@ -339,24 +339,7 @@ def model_info():
             "served_tmax_source": "ml_corrected" if SERVE_ML_TEMPERATURE else "physics",
             "clamp_rule": "hard +/-2.0 C ceiling applied to hourly residuals and daily offsets",
             "revert_command": "Set SERVE_ML_TEMPERATURE = False in release/api/main.py",
-            "accuracy": {
-                "ecmwf_ifs_forecast_served": {
-                    "input_source": "Open-Meteo ECMWF IFS 0.25 deg operational forecasts (2024-03 to 2024-12, 605 station-days)",
-                    "tmax_baseline_mae_c": 2.1225,
-                    "tmax_ml_corrected_mae_c": 1.5320,
-                    "improvement_pct": 27.8,
-                    "worse_days_pct": 15.5,
-                    "tmin_physics_mae_c": 1.1876
-                },
-                "era5_reanalysis_reference": {
-                    "input_source": "ERA5 hourly reanalysis (2023-01 to 2024-12, 1,500 station-days)",
-                    "tmax_baseline_mae_c": 1.8404,
-                    "tmax_ml_corrected_mae_c": 1.5558,
-                    "improvement_pct": 15.5,
-                    "worse_days_pct": 31.9,
-                    "tmin_physics_mae_c": 1.0540
-                }
-            },
-            "note": "The batch pipeline precomputes both village_daily_physics.csv and village_daily_ml.csv. Served values use ECMWF IFS 0.25 deg forecast inputs with ML-corrected Tmax (MAE 2.12 -> 1.53 C across 605 IFS station-days) and physics-only Tmin (1.19 C on IFS / 1.054 C on ERA5). A 1-line mid-demo revert to physics is enabled via SERVE_ML_TEMPERATURE = False."
+            "disclaimer": "Tmax: physics lapse-rate correction plus XGBoost residual (clamped +/-2.0 C); Tmin: physics only; ML accuracy measured offline on ERA5/analysis-quality input at 3 GHCN stations; 1-7 day forecast error not yet measured.",
+            "note": "Tmax: physics lapse-rate correction plus XGBoost residual (clamped +/-2.0 C); Tmin: physics only; ML accuracy measured offline on ERA5/analysis-quality input at 3 GHCN stations; 1-7 day forecast error not yet measured."
         }
     }
