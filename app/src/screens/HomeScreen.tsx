@@ -71,7 +71,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {/* Main Body */}
-      <main className="flex-1 min-h-0 w-full pt-16 pb-16 pb=24 overflow-y-auto">
+      <main className="flex-1 w-full pt-16 pb-24">
         {/* Top Hero Landscape Banner */}
         <div className="relative w-full overflow-hidden mb-2">
           {/* Background image & gradient */}

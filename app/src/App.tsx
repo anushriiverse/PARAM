@@ -298,14 +298,8 @@ function ParamAppShell() {
             {/* Scrollable PARAM column: all 16 screens + bottom nav */}
             <div
               className="flex-1 min-h-0 overflow-y-auto overscroll-contain relative min-h-0"
-              // style={{ transform: 'translateZ(0)' }}
+              style={{ transform: 'translateZ(0)' }}
             >
-              <BottomNav
-                currentScreen={currentScreen}
-                onNavigate={navigateTo}
-                language={language}
-                 alertCount={3}
-              />
         {/* Render Screen according to currentScreen */}
         {currentScreen === 'splash' && (
           <HomeScreen
@@ -476,6 +470,14 @@ function ParamAppShell() {
           }}
         />
             </div>
+
+            {/* Docked Bottom Navigation */}
+            <BottomNav
+              currentScreen={currentScreen}
+              onNavigate={navigateTo}
+              language={language}
+              alertCount={3}
+            />
           </div>
         )}
       </div>
