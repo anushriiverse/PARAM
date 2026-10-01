@@ -61,6 +61,18 @@ if DAILY_DATA_PATH.exists():
 else:
     df_daily = None
 
+FORECAST_7DAY_PATH = BASE_DIR / "data" / "village_forecast_7day.csv"
+if not FORECAST_7DAY_PATH.exists():
+    FORECAST_7DAY_PATH = BASE_DIR.parent / "outputs" / "village_forecast_7day.csv"
+if not FORECAST_7DAY_PATH.exists():
+    FORECAST_7DAY_PATH = Path("outputs/village_forecast_7day.csv")
+
+if FORECAST_7DAY_PATH.exists():
+    df_7day = pd.read_csv(FORECAST_7DAY_PATH)
+    df_7day["village_id"] = df_7day["village_id"].astype(str)
+else:
+    df_7day = None
+
 VILLAGE_LATS = df["lat"].to_numpy(dtype=np.float64)
 VILLAGE_LONS = df["lon"].to_numpy(dtype=np.float64)
 VILLAGE_LATS_RAD = np.radians(VILLAGE_LATS)
@@ -220,6 +232,58 @@ def daily(
         "in_domain": in_domain,
         "driver_model": "ecmwf_ifs025",
         "driver_source": "Open-Meteo ECMWF IFS (0.25 deg)"
+    }
+
+
+@app.get("/api/forecast7")
+def forecast7(
+    lat: float = Query(..., description="Latitude of query location"),
+    lon: float = Query(..., description="Longitude of query location")
+):
+    if df_7day is None:
+        return {"error": "7-day forecast table not loaded"}
+
+    distances = haversine_vectorized(lat, lon)
+    min_idx = int(np.argmin(distances))
+    distance_km = round(float(distances[min_idx]), 2)
+    v_id = str(df.iloc[min_idx]["village_id"])
+
+    in_domain = bool(
+        DOMAIN_LAT_MIN <= lat <= DOMAIN_LAT_MAX and
+        DOMAIN_LON_MIN <= lon <= DOMAIN_LON_MAX
+    )
+
+    v_rows = df_7day[df_7day["village_id"] == v_id].sort_values("forecast_date")
+    records = []
+    for _, r in v_rows.iterrows():
+        records.append({
+            "forecast_date": str(r["forecast_date"]),
+            "lead_day": int(r["lead_day"]) if "lead_day" in r and not pd.isna(r["lead_day"]) else None,
+            "rain_mm": round(float(r["rain_mm"]), 2),
+            "cell_precip_sum_mm": round(float(r["cell_precip_sum_mm"]), 2),
+            "tmax_c": round(float(r["tmax_c"]), 2),
+            "tmin_c": round(float(r["tmin_c"]), 2),
+            "tmean_c": round(float(r["tmean_c"]), 2),
+            "eto_mm_day": round(float(r["eto_mm_day"]), 2),
+            "wind_speed_max_kmh": round(float(r["wind_speed_max_kmh"]), 1),
+            "wind_dir_deg": int(r["wind_dir_deg"]),
+            "gate_g": round(float(r["gate_g"]), 4),
+            "effective_ratio": round(float(r["effective_ratio"]), 4),
+            "inside_validated_band": bool(r["inside_validated_band"]),
+            "tmax_source": str(r["tmax_source"]) if "tmax_source" in r and not pd.isna(r["tmax_source"]) else ("physics" if not SERVE_ML_TEMPERATURE else "ml_corrected")
+        })
+
+    return {
+        "village_id": v_id,
+        "name": str(df.iloc[min_idx]["name"]),
+        "state": str(df.iloc[min_idx]["state"]),
+        "lat": round(float(df.iloc[min_idx]["lat"]), 5),
+        "lon": round(float(df.iloc[min_idx]["lon"]), 5),
+        "elevation_m": round(float(df.iloc[min_idx]["elevation_m"]), 1),
+        "distance_km": distance_km,
+        "in_domain": in_domain,
+        "forecast_days": records,
+        "records": records
     }
 
 
