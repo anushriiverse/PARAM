@@ -1,0 +1,86 @@
+{
+  "description": "Canonical dataset manifest for temperature validation (NOAA GHCN-Daily + Open-Meteo ERA5 / ECMWF IFS)",
+  "stations": {
+    "Karwar": {
+      "ghcn_id": "IN009120100",
+      "wmo_id": "43225",
+      "name": "KARWAR, IN",
+      "lat": 14.783,
+      "lon": 74.133,
+      "ghcn_elev_m": 4.0,
+      "srtm_elev_m": 12.0,
+      "served_village_id": "ka.geojson:493",
+      "served_village_name": "Binaga Nmct",
+      "served_village_elev_m": 103.7,
+      "served_offset_c": 0.10
+    },
+    "Honavar": {
+      "ghcn_id": "IN009120400",
+      "wmo_id": "43226",
+      "name": "HONAVAR, IN",
+      "lat": 14.283,
+      "lon": 74.450,
+      "ghcn_elev_m": 9.0,
+      "srtm_elev_m": 30.0,
+      "served_village_id": "ka.geojson:1179",
+      "served_village_name": "Honavar Tmc",
+      "served_village_elev_m": 24.9,
+      "served_offset_c": 0.68
+    },
+    "Chitradurga": {
+      "ghcn_id": "IN009070100",
+      "wmo_id": "43233",
+      "name": "CHITRADURGA, IN",
+      "lat": 14.233,
+      "lon": 76.433,
+      "ghcn_elev_m": 733.0,
+      "srtm_elev_m": 704.0,
+      "served_village_id": "ka.geojson:22611",
+      "served_village_name": "Medakeripura",
+      "served_village_elev_m": 719.6,
+      "served_offset_c": -0.33
+    }
+  },
+  "files": [
+    {
+      "filename": "era5_hourly_imd_2022-12-30_2024-12-31.json",
+      "cache_relpath": "data/cache/ml_temp/era5_hourly_imd_2022-12-30_2024-12-31.json",
+      "size_bytes": 2551904,
+      "md5": "3a91511a14bb6579516b654d66087102",
+      "source": "Open-Meteo Historical Weather API (ERA5 reanalysis)",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2022-12-30&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation"
+    },
+    {
+      "filename": "ifs_hourly_ghcn_2024-03-01_2024-12-31.json",
+      "cache_relpath": "data/cache/ml_temp/ifs_hourly_ghcn_2024-03-01_2024-12-31.json",
+      "size_bytes": 1066711,
+      "md5": "0df505d503952f504e418348d51b35f2",
+      "source": "Open-Meteo Historical Weather API (ECMWF IFS 0.25° operational forecast archive)",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2024-03-01&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation&models=ecmwf_ifs025"
+    },
+    {
+      "filename": "IN009120100_parsed.csv",
+      "cache_relpath": "data/cache/ghcn_daily/IN009120100_parsed.csv",
+      "size_bytes": 2103469,
+      "md5": "582b29ee264f9f6ed308193eaff9a48b",
+      "source": "NOAA NCEI GHCN-Daily Karwar",
+      "url": "https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/IN009120100.csv"
+    },
+    {
+      "filename": "IN009120400_parsed.csv",
+      "cache_relpath": "data/cache/ghcn_daily/IN009120400_parsed.csv",
+      "size_bytes": 1498579,
+      "md5": "aac40b6a5f52257582da3e5e44200dd2",
+      "source": "NOAA NCEI GHCN-Daily Honavar",
+      "url": "https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/IN009120400.csv"
+    },
+    {
+      "filename": "IN009070100_parsed.csv",
+      "cache_relpath": "data/cache/ghcn_daily/IN009070100_parsed.csv",
+      "size_bytes": 3733540,
+      "md5": "b4e956569920e52c7db9d165c3afd36c",
+      "source": "NOAA NCEI GHCN-Daily Chitradurga",
+      "url": "https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/IN009070100.csv"
+    }
+  ]
+}

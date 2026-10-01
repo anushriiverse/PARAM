@@ -1,25 +1,5 @@
-dataset,evaluation_target,station_name,station_id,prompt_id,village_id,village_name,variable,n_station_days,coarse_mae_c,coarse_bias_c,coarse_rmse_c,served_physics_mae_c,served_physics_bias_c,served_physics_rmse_c,net_effect_mae_c,ci_95_lower_c,ci_95_upper_c
-ERA5 Reanalysis Reference,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Tmax,573,3.4805,-3.4766,3.7104,3.3808,-3.3766,3.6169,-0.0997,3.2005,3.552
-ERA5 Reanalysis Reference,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Tmin,573,0.9644,0.1986,1.2304,0.982,0.2986,1.2505,0.0176,0.8993,1.0674
-ERA5 Reanalysis Reference,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Pooled,573,2.2224,-1.639,2.7641,2.1814,-1.539,2.706,-0.041,2.0839,2.2716
-ERA5 Reanalysis Reference,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Tmax,427,1.4876,-0.7733,1.8448,1.3529,-0.0933,1.6775,-0.1347,1.231,1.4777
-ERA5 Reanalysis Reference,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Tmin,427,0.9607,0.3429,1.3736,1.2454,1.0229,1.678,0.2848,1.0919,1.4201
-ERA5 Reanalysis Reference,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Pooled,427,1.2241,-0.2152,1.6264,1.2992,0.4648,1.6777,0.075,1.2071,1.4016
-ERA5 Reanalysis Reference,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Tmax,500,1.0586,-0.6526,1.3983,1.2253,-0.9826,1.5795,0.1667,1.0951,1.3631
-ERA5 Reanalysis Reference,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Tmin,500,0.7752,0.352,1.0556,0.7284,0.022,0.9954,-0.0468,0.6452,0.8148
-ERA5 Reanalysis Reference,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Pooled,500,0.9169,-0.1503,1.2388,0.9768,-0.4803,1.3202,0.0599,0.9017,1.052
-ERA5 Reanalysis Reference,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Tmax,1500,2.1059,-1.7657,2.6229,2.085,-1.644,2.5748,-0.0208,1.9403,2.2345
-ERA5 Reanalysis Reference,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Tmin,1500,0.9003,0.2908,1.2194,0.9725,0.4126,1.315,0.0722,0.9091,1.0463
-ERA5 Reanalysis Reference,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Pooled,1500,1.5031,-0.7375,2.0453,1.5287,-0.6157,2.0444,0.0257,1.4503,1.6109
-ECMWF IFS Forecast Served,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Tmax,202,3.7797,-3.7698,4.0029,3.6807,-3.6698,3.9088,-0.099,3.41,3.9595
-ECMWF IFS Forecast Served,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Tmin,202,1.0777,-0.451,1.4012,1.0441,-0.351,1.3723,-0.0337,0.9021,1.1798
-ECMWF IFS Forecast Served,served_village_polygon,Karwar,IN009120100,IN012131700,ka.geojson:493,Binaga Nmct,Pooled,202,2.4287,-2.1104,2.9989,2.3624,-2.0104,2.9293,-0.0663,2.2008,2.5243
-ECMWF IFS Forecast Served,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Tmax,204,2.2833,-2.2608,2.5271,1.6598,-1.5808,1.9427,-0.6235,1.448,1.8729
-ECMWF IFS Forecast Served,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Tmin,204,1.3485,1.1701,1.6739,1.8823,1.8501,2.2035,0.5337,1.617,2.1569
-ECMWF IFS Forecast Served,served_village_polygon,Honavar,IN009120400,IN012131900,ka.geojson:1179,Honavar Tmc,Pooled,204,1.8159,-0.5453,2.1434,1.771,0.1347,2.0772,-0.0449,1.6115,1.9263
-ECMWF IFS Forecast Served,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Tmax,199,1.4291,-1.2362,1.8127,1.6644,-1.5662,2.052,0.2352,1.4274,1.8972
-ECMWF IFS Forecast Served,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Tmin,199,0.7965,0.5553,1.0512,0.6725,0.2253,0.9205,-0.124,0.5461,0.8033
-ECMWF IFS Forecast Served,served_village_polygon,Chitradurga,IN009070100,IN009010400,ka.geojson:22611,Medakeripura,Pooled,199,1.1128,-0.3405,1.4817,1.1684,-0.6705,1.5903,0.0556,1.0507,1.2927
-ECMWF IFS Forecast Served,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Tmax,605,2.502,-2.4276,2.9298,2.336,-2.2735,2.7855,-0.1659,2.1161,2.5632
-ECMWF IFS Forecast Served,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Tmin,605,1.0765,0.4266,1.4013,1.2045,0.5807,1.5952,0.128,1.065,1.3611
-ECMWF IFS Forecast Served,served_village_polygon,Pooled (All 3),ALL_3,ALL_3,VARIOUS,"Karwar, Honavar, Chitradurga Polygons",Pooled,605,1.7893,-1.0005,2.2965,1.7703,-0.8464,2.2698,-0.019,1.6497,1.8922
+dataset,evaluation_target,station_name,station_id,variable,n_station_days,coarse_mae_c,coarse_bias_c,stn_coord_mae_c,stn_coord_bias_c,stn_coord_paired_diff_c,stn_coord_ci_lower_c,stn_coord_ci_upper_c,stn_coord_excludes_0,served_village_mae_c,served_village_bias_c,served_village_paired_diff_c,served_village_ci_lower_c,served_village_ci_upper_c,served_village_excludes_0
+ERA5 Reanalysis Reference,pooled_all_stations,Pooled (All 3),ALL_3,Tmax,1500,2.1059,-1.7657,1.8399,-1.39,-0.266,-0.3164,-0.2163,True,2.085,-1.644,-0.0208,-0.0554,0.0131,False
+ERA5 Reanalysis Reference,pooled_all_stations,Pooled (All 3),ALL_3,Tmin,1500,0.9003,0.2908,1.0551,0.6666,0.1548,0.1128,0.1966,True,0.9725,0.4126,0.0722,0.0438,0.1018,True
+ECMWF IFS Forecast Served,pooled_all_stations,Pooled (All 3),ALL_3,Tmax,605,2.502,-2.4276,2.1217,-2.0504,-0.3803,-0.4476,-0.3092,True,2.336,-2.2735,-0.1659,-0.2346,-0.0992,True
+ECMWF IFS Forecast Served,pooled_all_stations,Pooled (All 3),ALL_3,Tmin,605,1.0765,0.4266,1.1882,0.8039,0.1117,0.034,0.1855,True,1.2045,0.5807,0.128,0.0659,0.1933,True
