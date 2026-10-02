@@ -39,7 +39,7 @@ SERVE_ML_TEMPERATURE: bool = True
 ```
 
 ### How ML Tmax is Applied:
-- A single diurnal temperature residual offset (`ml_offset_tmax_c`) is computed per village from a 24-hour IFS forecast lattice ($N=247$ points $\times 24$ hours) using XGBoost v2.
+- A diurnal temperature residual offset (`ml_offset_tmax_c`) is computed per village per lead from hourly IFS forecasts (using UTC hour/doy features and IST calendar day grouping) using XGBoost v2 (`residual_temp_v2.json`).
 - The offset is bounded by a hard ceiling of $\pm 2.0^\circ\text{C}$ (`clamp_limit_c = 2.0`).
 - Applied operationally as: $T_{\text{max, served}} = T_{\text{max, physics}} + \Delta_{\text{ML}}$.
 - Operational 1–7 day decay error is unmeasured prior to continuous multi-season operational tracking.
@@ -55,7 +55,7 @@ Set `SERVE_ML_TEMPERATURE = False` in `api/main.py` and restart/redeploy. The ba
 | :--- | :--- | :--- |
 | **Orographic Rain (7-day)** | Live on `/api/daily` & `/api/forecast7` | 16.09% median APE via `validation/run_gauge_validation.py` |
 | **Physics Lapse Rate** | Live fallback for $T_{\text{max}}$, active for $T_{\text{min}}$ | $1.84^\circ\text{C}$ ERA5 / $2.12^\circ\text{C}$ IFS via `validation/run_temperature_validation.py` |
-| **ML $T_{\text{max}}$ Correction** | Live on `/api/daily` (clamped $\pm 2.0^\circ\text{C}$) | Offline research benchmark; 1-7 day operational error not yet measured |
+| **ML $T_{\text{max}}$ Correction** | Live on `/api/daily` & `/api/forecast7` (clamped $\pm 2.0^\circ\text{C}$) | $1.56^\circ\text{C}$ ERA5 ($N=1,497$) / $1.54^\circ\text{C}$ IFS ($N=605$) via `validation/run_ml_validation.py`; 1–7 day operational error unmeasured |
 | **Soil Water & Advisories** | **Excluded from production** | Kept in local-only research archives |
 
 ---
@@ -72,7 +72,10 @@ CANONICAL MEASUREMENTS (FROM COMMITTED SCRIPTS)
                           Script: validation/run_temperature_validation.py
 - Physics Tmin MAE:       1.05 °C (ERA5, N=1,500) | 1.19 °C (ECMWF IFS, N=605)
                           Script: validation/run_temperature_validation.py
-- ML-Corrected Tmax:      Hard ±2.0 °C clamp applied; operational 1-7 day error unmeasured
+- ML-Corrected Tmax MAE:  1.56 °C (ERA5, N=1,497) | 1.54 °C (ECMWF IFS, N=605)
+                          Stations: Karwar, Honavar, Chitradurga (spatial holdouts)
+                          Script: validation/run_ml_validation.py
+                          Hard ±2.0 °C clamp applied; 1-7 day operational error unmeasured
 ========================================================================================
 ```
 
