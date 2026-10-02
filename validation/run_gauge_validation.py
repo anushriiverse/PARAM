@@ -270,22 +270,48 @@ def main():
     for _, r in df_19.iterrows():
         print(f"{r['id']:11s} | {r['name'][:20]:20s} | {r['zone']:11s} | {r['mean_jjas_mm']:9.1f} | {r['pred_0']:9.1f} | {r['ape_0']:7.2f}% | {r['pred_20']:10.1f} | {r['ape_20']:8.2f}%")
 
-    # Exclude Chitradurga (asymptotic fit station) from headline skill
-    df_headline = df_19[df_19['id'] != 'IN009070100'].copy()
+    # Merge Agumbe IN009181800 and Agumbe Obsy IN009183600 (both in ka.geojson:5921, mean obs = 6911.55 mm)
+    agumbe_obs = float(df_19[df_19['id'].isin(['IN009181800', 'IN009183600'])]['mean_jjas_mm'].mean())
+    ag_row = df_19[df_19['id'] == 'IN009181800'].copy().iloc[0].to_dict()
+    ag_row['id'] = 'IN009181800/3600'
+    ag_row['name'] = 'AGUMBE (COMBINED)'
+    ag_row['mean_jjas_mm'] = agumbe_obs
+    ag_row['ae_0'] = abs(ag_row['pred_0'] - agumbe_obs)
+    ag_row['ape_0'] = ag_row['ae_0'] / agumbe_obs * 100.0
+    ag_row['ae_20'] = abs(ag_row['pred_20'] - agumbe_obs)
+    ag_row['ape_20'] = ag_row['ae_20'] / agumbe_obs * 100.0
+
+    # Exclude Chitradurga (asymptotic fit station) and combine Agumbe for N=17 headline
+    df_other = df_19[~df_19['id'].isin(['IN009181800', 'IN009183600', 'IN009070100'])].copy()
+    df_headline = pd.concat([df_other, pd.DataFrame([ag_row])], ignore_index=True)
     ww = df_headline['zone'].isin(['Coast', 'Escarpment'])
 
+    # Lateral dispersion transition counts
+    improved = int(np.sum(df_headline['ape_20'] < df_headline['ape_0'] - 0.01))
+    degraded = int(np.sum(df_headline['ape_20'] > df_headline['ape_0'] + 0.01))
+    unchanged = int(np.sum(np.abs(df_headline['ape_20'] - df_headline['ape_0']) <= 0.01))
+
+    c25_0 = int(np.sum(df_headline['ape_0'] > 25.0))
+    c25_20 = int(np.sum(df_headline['ape_20'] > 25.0))
+    c25_ww_0 = int(np.sum(df_headline.loc[ww, 'ape_0'] > 25.0))
+    c25_ww_20 = int(np.sum(df_headline.loc[ww, 'ape_20'] > 25.0))
+    c25_lee_0 = int(np.sum(df_headline.loc[~ww, 'ape_0'] > 25.0))
+    c25_lee_20 = int(np.sum(df_headline.loc[~ww, 'ape_20'] > 25.0))
+
     print("\n" + "=" * 88)
-    print("HEADLINE SKILL METRICS (Chitradurga Excluded, N=18):")
+    print("HEADLINE SKILL METRICS (Chitradurga Excluded, Agumbe Merged, N=17):")
     print("=" * 88)
-    print(f"Windward / Crest (N=11):")
-    print(f"  σ=0 km (Base):  Median APE = {df_headline.loc[ww, 'ape_0'].median():.2f}%, Mean MAE = {df_headline.loc[ww, 'ae_0'].mean():.1f} mm")
-    print(f"  σ=20 km (Disp): Median APE = {df_headline.loc[ww, 'ape_20'].median():.2f}%, Mean MAE = {df_headline.loc[ww, 'ae_20'].mean():.1f} mm")
+    print(f"Windward / Crest (N=10):")
+    print(f"  σ=0 km (Base):  Median APE = {df_headline.loc[ww, 'ape_0'].median():.2f}%, Mean MAE = {df_headline.loc[ww, 'ae_0'].mean():.1f} mm | Count >25%: {c25_ww_0}/10")
+    print(f"  σ=20 km (Disp): Median APE = {df_headline.loc[ww, 'ape_20'].median():.2f}%, Mean MAE = {df_headline.loc[ww, 'ae_20'].mean():.1f} mm | Count >25%: {c25_ww_20}/10")
     print(f"Lee Side (N=7):")
-    print(f"  σ=0 km (Base):  Median APE = {df_headline.loc[~ww, 'ape_0'].median():.2f}%, Mean MAE = {df_headline.loc[~ww, 'ae_0'].mean():.1f} mm")
-    print(f"  σ=20 km (Disp): Median APE = {df_headline.loc[~ww, 'ape_20'].median():.2f}%, Mean MAE = {df_headline.loc[~ww, 'ae_20'].mean():.1f} mm")
-    print(f"Pooled (N=18):")
-    print(f"  σ=0 km (Base):  Median APE = {df_headline['ape_0'].median():.2f}%, Mean MAE = {df_headline['ae_0'].mean():.1f} mm")
-    print(f"  σ=20 km (Disp): Median APE = {df_headline['ape_20'].median():.2f}%, Mean MAE = {df_headline['ae_20'].mean():.1f} mm")
+    print(f"  σ=0 km (Base):  Median APE = {df_headline.loc[~ww, 'ape_0'].median():.2f}%, Mean MAE = {df_headline.loc[~ww, 'ae_0'].mean():.1f} mm | Count >25%: {c25_lee_0}/7")
+    print(f"  σ=20 km (Disp): Median APE = {df_headline.loc[~ww, 'ape_20'].median():.2f}%, Mean MAE = {df_headline.loc[~ww, 'ae_20'].mean():.1f} mm | Count >25%: {c25_lee_20}/7")
+    print(f"Pooled (N=17):")
+    print(f"  σ=0 km (Base):  Median APE = {df_headline['ape_0'].median():.2f}%, Mean MAE = {df_headline['ae_0'].mean():.1f} mm | Count >25%: {c25_0}/17")
+    print(f"  σ=20 km (Disp): Median APE = {df_headline['ape_20'].median():.2f}%, Mean MAE = {df_headline['ae_20'].mean():.1f} mm | Count >25%: {c25_20}/17")
+    print(f"\nPer-Gauge Lateral Dispersion Transition (σ=0 -> σ=20 km across N=17):")
+    print(f"  Improved: {improved} | Unchanged: {unchanged} | Degraded: {degraded} (Thirthahalli 0.50% -> 19.81%)")
 
     # Separate Chitradurga fitted-parameter sanity check
     chit = df_19[df_19['id'] == 'IN009070100'].iloc[0]

@@ -321,18 +321,19 @@ def search(q: str = Query("", description="Search query")):
 def model_info():
     return {
         "rainfall": {
-            "canonical_median_ape_pct": 16.09,
-            "windward_median_ape_pct": 9.53,
-            "leeward_median_ape_pct": 32.03,
-            "n_gauges": 19,
+            "canonical_median_ape_pct": 12.35,
+            "windward_median_ape_pct": 7.57,
+            "leeward_median_ape_pct": 19.92,
+            "n_gauges": 17,
             "domain_band": "12.8-15.3N",
             "n_villages_in_band": 8634,
             "n_villages_total": 16943,
             "per_station_spread_ape_pct": {
-                "Hulikal": 50.6,
-                "Agumbe_Obsy": 27.7
+                "Chickmagalur": 61.44,
+                "Hulikal": 53.13,
+                "Sagar": 41.46
             },
-            "cell_mass_conservation_worst_error": 4.44e-16
+            "cell_mass_conservation_worst_error": 0.5277
         },
         "temperature": {
             "tmax_serving_method": "XGBoost diurnal residual correction (v2) applied to lapse-rate base with hard +/-2.0 C clamp" if SERVE_ML_TEMPERATURE else "physics-only lapse-rate (6.5 C/km) on 30 m SRTM terrain",

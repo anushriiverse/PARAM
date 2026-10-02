@@ -159,11 +159,17 @@ def main():
         print(f"  WARNING: Overlapping stations found: {overlap}")
 
     # 4. Evaluation Loop (Reusing Canonical WMO/IMD Observation Window)
+    print("\n[Daily Aggregation Window Convention]")
+    print("  Observation Matching (Ground Truth): 12:00 UTC (day-1) to 12:00 UTC (day-0)")
+    print("  Operational Serving (Bake / API):    00:00 to 23:59 IST calendar day (UTC hour features)")
+
     datasets = [
-        ("ERA5 Reanalysis (2023-01 to 2024-12)", "era5_hourly_ghcn_2023-01-01_2024-12-31.json",
+        ("ERA5 Reanalysis (2023-01 to 2024-12)",
+         ["era5_hourly_imd_2022-12-30_2024-12-31.json", "era5_hourly_ghcn_2023-01-01_2024-12-31.json"],
          "https://archive-api.open-meteo.com/v1/archive?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2022-12-30&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation",
          pd.date_range('2023-01-01', '2024-12-31').date),
-        ("ECMWF IFS Near-Analysis (2024-03 to 2024-12)", "ifs_hourly_ghcn_2024-03-01_2024-12-31.json",
+        ("ECMWF IFS Near-Analysis (2024-03 to 2024-12)",
+         ["ifs_hourly_ghcn_2024-03-01_2024-12-31.json"],
          "https://previous-runs-api.open-meteo.com/v1/forecast?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2024-03-01&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation&models=ecmwf_ifs025",
          pd.date_range('2024-03-01', '2024-12-31').date)
     ]
@@ -171,15 +177,17 @@ def main():
     summary_tmax = []
     summary_tmin = []
 
-    for label, fname, fetch_url, date_range in datasets:
+    for label, fnames, fetch_url, date_range in datasets:
         print("\n" + "=" * 102)
         print(f"EVALUATION ON: {label}")
         print("=" * 102)
 
-        file_path = find_or_fetch([
-            root_dir / "data" / "cache" / "ml_temp" / fname,
-            root_dir.parent / "data" / "cache" / "ml_temp" / fname
-        ], fetch_url=fetch_url)
+        candidate_paths = []
+        for fn in fnames:
+            candidate_paths.append(root_dir / "data" / "cache" / "ml_temp" / fn)
+            candidate_paths.append(root_dir.parent / "data" / "cache" / "ml_temp" / fn)
+
+        file_path = find_or_fetch(candidate_paths, fetch_url=fetch_url)
 
         with open(file_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
