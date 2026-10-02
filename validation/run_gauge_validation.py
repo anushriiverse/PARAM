@@ -28,6 +28,10 @@ independent skill validation points (or N=18 if Agumbe stations are listed separ
 import sys
 import os
 import subprocess
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 import numpy as np
 import pandas as pd
 import rasterio
@@ -215,16 +219,9 @@ def main():
 
     df_corr = pd.read_csv(corr_path, low_memory=False)
     df_trans = pd.read_csv(trans_path)
-    area_map = dict(zip(df_corr['village_id'], df_corr['polygon_area_km2']))
-    df_trans['area'] = df_trans['village_id'].map(area_map)
-    df_trans['node_lat'] = np.round(df_trans['node_lat'], 2)
-    df_trans['node_lon'] = np.round(df_trans['node_lon'], 2)
-
-    # Compute parent-cell area-weighted normalization factors
-    cell_means = {}
-    for (nlat, nlon), grp in df_trans.groupby(['node_lat', 'node_lon']):
-        w = grp['area'].values
-        cell_means[(round(float(nlat), 2), round(float(nlon), 2))] = np.sum(grp['rain_ratio'].values * w) / np.sum(w)
+    from engine.application.disaggregation import compute_cell_area_mean_ratios, renormalize_cell_ratios
+    df_trans = renormalize_cell_ratios(df_trans, df_corr)
+    cell_means = compute_cell_area_mean_ratios(df_trans, df_corr)
 
     vid_map = {
         'IN009120100': 'ka.geojson:493',

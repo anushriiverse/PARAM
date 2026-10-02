@@ -13,22 +13,9 @@ import numpy as np
 import pandas as pd
 
 
-def renormalize_cell_ratios(df_transfer: pd.DataFrame, df_corr: pd.DataFrame) -> pd.DataFrame:
+def compute_cell_area_mean_ratios(df_transfer: pd.DataFrame, df_corr: pd.DataFrame) -> dict:
     """
-    Renormalizes rain_ratio within each 0.25° grid cell by the cell's
-    polygon-area-weighted mean ratio, ensuring area-weighted mean equals 1.0 per cell.
-    
-    Parameters
-    ----------
-    df_transfer : pd.DataFrame
-        Village transfer table (16,943 villages) containing village_id, node_lat, node_lon, rain_ratio.
-    df_corr : pd.DataFrame
-        Village corrections table containing village_id, polygon_area_km2.
-        
-    Returns
-    -------
-    pd.DataFrame
-        Updated df_transfer with strictly mass-conserving rain_ratio.
+    Computes polygon-area-weighted mean rain_ratio for each (node_lat, node_lon) parent cell.
     """
     df = df_transfer.copy()
     area_map = dict(zip(df_corr['village_id'], df_corr['polygon_area_km2']))
@@ -42,11 +29,19 @@ def renormalize_cell_ratios(df_transfer: pd.DataFrame, df_corr: pd.DataFrame) ->
     for cid, grp in df.groupby('cell_id'):
         w = grp['polygon_area_km2'].values
         cell_mean_ratios[cid] = float(np.sum(grp['rain_ratio'].values * w) / np.sum(w))
+    return cell_mean_ratios
 
-    cell_means = df['cell_id'].map(cell_mean_ratios).values
+
+def renormalize_cell_ratios(df_transfer: pd.DataFrame, df_corr: pd.DataFrame) -> pd.DataFrame:
+    """
+    Renormalizes rain_ratio within each 0.25° grid cell by the cell's
+    polygon-area-weighted mean ratio, ensuring area-weighted mean equals 1.0 per cell.
+    """
+    df = df_transfer.copy()
+    cell_mean_ratios = compute_cell_area_mean_ratios(df, df_corr)
+    cell_ids = list(zip(np.round(df['node_lat'], 2), np.round(df['node_lon'], 2)))
+    cell_means = np.array([cell_mean_ratios[cid] for cid in cell_ids])
     df['rain_ratio'] = df['rain_ratio'] / cell_means
-
-    df = df.drop(columns=['polygon_area_km2', 'cell_id'])
     return df
 
 

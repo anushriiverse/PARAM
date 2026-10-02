@@ -321,6 +321,7 @@ def search(q: str = Query("", description="Search query")):
 def model_info():
     return {
         "rainfall": {
+            "evaluation_methodology": "same ratio field and fitted constants as the served product, evaluated as a June-September seasonal total at the village containing each gauge",
             "canonical_median_ape_pct": 13.27,
             "canonical_mean_mae_mm": 582.4,
             "windward_median_ape_pct": 5.84,
