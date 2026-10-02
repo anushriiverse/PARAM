@@ -25,15 +25,15 @@ Live, orographic weather downscaling engine delivering daily and 7-day panchayat
 | Feature / Component | Status | Prototype Implementation Details & Citations |
 | :--- | :--- | :--- |
 | **7-day forecast** | Implemented | Live 7-day panchayat forecasts served at [`/api/forecast7`](https://agromet-api.vercel.app/api/forecast7) from [`api/data/village_forecast_7day.csv`](api/data/village_forecast_7day.csv) |
-| **hourly 168-hour output** | Substituted | Prototype computes daily aggregations from 24-hr IFS hourly lattice instead of serving full 168-hr raw arrays; precomputed in [`api/data/village_forecast_7day.csv`](api/data/village_forecast_7day.csv) |
+| **hourly 168-hour output** | Substituted | 7 days of hourly ECMWF IFS used in the bake; the API serves daily values |
 | **village forecasts** | Implemented | Daily weather served for 16,943 panchayats across KA, MH, GA at [`/api/daily`](https://agromet-api.vercel.app/api/daily) from [`api/data/village_daily.csv`](api/data/village_daily.csv) |
 | **ML residual correction** | Implemented | XGBoost v2 diurnal residual model ([`ml/models/residual_temp_v2.json`](ml/models/residual_temp_v2.json)) applied to $T_{\text{max}}$ with $\pm 2.0^\circ\text{C}$ clamp in [`engine/application/bake_daily_forecast.py`](engine/application/bake_daily_forecast.py); served via [`/api/daily`](https://agromet-api.vercel.app/api/daily) |
 | **physics-only fallback** | Implemented | Physics lapse-rate table [`api/data/village_daily_physics.csv`](api/data/village_daily_physics.csv); instant 1-line switch `SERVE_ML_TEMPERATURE=False` in [`api/main.py`](api/main.py) |
 | **ET0** | Implemented | Hargreaves-Samani potential evapotranspiration computed in [`engine/application/bake_daily_forecast.py`](engine/application/bake_daily_forecast.py) and served in [`api/data/village_daily.csv`](api/data/village_daily.csv) (`et0_hs_mm`) |
-| **humidity and pressure** | Implemented | Relative humidity (`rh_pct`) and surface pressure (`surface_pressure_hpa`) served in [`api/data/village_daily.csv`](api/data/village_daily.csv) and [`/api/daily`](https://agromet-api.vercel.app/api/daily) |
+| **humidity and pressure** | Production design (not in prototype) | Planned for operational production deployment; not served by prototype `/api/daily` or `village_daily.csv` |
 | **PostgreSQL/TimescaleDB** | Substituted | High-performance in-memory Pandas/CSV tables loaded at cold start ($<10\text{ ms}$) in [`api/main.py`](api/main.py) rather than external relational database cluster |
 | **NDVI/satellite** | Production design (not in prototype) | Planned high-resolution Sentinel-2 / MODIS vegetative index ingestion pipeline for operational deployment |
-| **IMD API** | Substituted | Operational Open-Meteo ECMWF IFS $0.25^\circ$ NWP API used for live boundary forecasts; historical IMD rain gauges used for offline validation |
+| **IMD API** | Not used in the prototype | ECMWF IFS via Open-Meteo is the driver; IMD gauges are used for validation only. |
 | **irrigation/crop advisory and alerts** | Production design (not in prototype) | Agronomic advisory engine, crop growth stages, and threshold alert logic planned for production deployment |
 | **SMS/WhatsApp/IVRS** | Production design (not in prototype) | Multi-channel farmer alert gateway planned for production integration |
 | **Android** | Substituted | Mobile-first responsive React 19 PWA deployed at [`https://agromet-app.vercel.app`](https://agromet-app.vercel.app) (installable on Android homescreen); native Android APK planned for production |
@@ -57,15 +57,15 @@ CANONICAL PERFORMANCE METRICS (VERIFIED BY COMMITTED SCRIPTS)
 
 2. TEMPERATURE PHYSICS BASELINE (Script: validation/run_temperature_validation.py)
    - Truth Source: NOAA GHCN daily surface stations (Binaga, Honavar, Medakeripura)
-   - Physics Baseline MAE (ERA5, N=1,500 station-days): 1.84 °C (Tmax), 1.05 °C (Tmin)
-   - Physics Baseline MAE (ECMWF IFS, N=605 station-days): 2.12 °C (Tmax), 1.19 °C (Tmin)
+   - Physics Baseline MAE (ERA5, N=1,497): 1.84 °C (Tmax), 1.05 °C (Tmin)
+   - Physics Baseline MAE (ECMWF IFS, N=605): 2.12 °C (Tmax), 1.19 °C (Tmin)
 
 3. ML RESIDUAL TEMPERATURE CORRECTION (Script: validation/run_ml_validation.py)
    - Truth Source: NOAA GHCN daily surface stations (Karwar, Honavar, Chitradurga; 100% spatial holdouts)
-   - Physics Baseline MAE:     1.85 °C (ERA5, N=1,497) | 2.16 °C (ECMWF IFS, N=605)
-   - Physics + ML (v2) MAE:    1.56 °C (ERA5, N=1,497) | 1.54 °C (ECMWF IFS, N=605)
-   - Statistically Significant: Paired diff -0.29 °C (ERA5, 95% CI [-0.35, -0.24]), -0.61 °C (IFS, 95% CI [-0.70, -0.52])
-   - Operational Serving:      Applied to Tmax only with hard ±2.0 °C clamp; Tmin stays pure physics (ML degrades Tmin by +0.09 to +0.16 °C);
+   - Physics Baseline MAE:     1.84 °C (ERA5, N=1,497) | 2.12 °C (ECMWF IFS, N=605)
+   - Physics + ML (v2) MAE:    1.56 °C (ERA5, N=1,497) | 1.53 °C (ECMWF IFS, N=605)
+   - Statistically Significant: Paired diff -0.28 °C (ERA5, 95% CI [-0.34, -0.23]), -0.59 °C (IFS, 95% CI [-0.68, -0.50])
+   - Operational Serving:      Applied to Tmax only with hard ±2.0 °C clamp; Tmin stays pure physics (ML degrades Tmin by +0.08 to +0.16 °C);
                                1-7 day operational forecast error is unmeasured.
 ========================================================================================
 ```
@@ -122,6 +122,18 @@ npm run build
 
 ---
 
+## Data Sources
+
+- **Open-Meteo**: Weather forecast and historical reanalysis APIs ([CC BY 4.0](https://open-meteo.com/)).
+- **ECMWF IFS & ERA5**: Coarse meteorological drivers obtained via Open-Meteo API.
+- **NOAA GHCN-Daily**: In-situ daily temperature and precipitation observations (Public Domain).
+- **SRTM 30m DEM**: NASA / USGS Shuttle Radar Topography Mission elevation model (Public Domain).
+- **Rain Gauges**: KSNDMC & IMD daily monsoon rainfall records across Western Ghats transects.
+- **Maharashtra AWS Station Data** (`data/cache/ml_temp/clean_training_data.csv`): NWDP AWS network (Aurangpur, Bhatsanagar_1, Natuwadi Dam_1); licence/terms are unclear/unspecified on the portal page.
+
+---
+
 ## Model Disclaimer
 
-> **Tmax**: Physics lapse-rate correction plus XGBoost residual (clamped $\pm 2.0^\circ\text{C}$); **Tmin**: Physics only; ML accuracy measured offline on ERA5/analysis-quality input at 3 GHCN stations; 1–7 day forecast error not yet measured.
+> Tmax: physics lapse-rate correction plus XGBoost diurnal residual (clamped +/-2.0 C); Tmin: physics only; ML offsets derived per date from hourly ECMWF IFS (0.25 deg) forecast; 1-7 day operational forecast error is not yet measured.
+

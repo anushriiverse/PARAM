@@ -158,18 +158,20 @@ def main():
     else:
         print(f"  WARNING: Overlapping stations found: {overlap}")
 
-    # 4. Evaluation Loop
+    # 4. Evaluation Loop (Reusing Canonical WMO/IMD Observation Window)
     datasets = [
         ("ERA5 Reanalysis (2023-01 to 2024-12)", "era5_hourly_ghcn_2023-01-01_2024-12-31.json",
-         "https://archive-api.open-meteo.com/v1/archive?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2022-12-30&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation"),
+         "https://archive-api.open-meteo.com/v1/archive?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2022-12-30&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation",
+         pd.date_range('2023-01-01', '2024-12-31').date),
         ("ECMWF IFS Near-Analysis (2024-03 to 2024-12)", "ifs_hourly_ghcn_2024-03-01_2024-12-31.json",
-         "https://previous-runs-api.open-meteo.com/v1/forecast?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2024-03-01&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation&models=ecmwf_ifs025")
+         "https://previous-runs-api.open-meteo.com/v1/forecast?latitude=14.783,14.283,14.233&longitude=74.133,74.450,76.433&start_date=2024-03-01&end_date=2024-12-31&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation&models=ecmwf_ifs025",
+         pd.date_range('2024-03-01', '2024-12-31').date)
     ]
 
     summary_tmax = []
     summary_tmin = []
 
-    for label, fname, fetch_url in datasets:
+    for label, fname, fetch_url, date_range in datasets:
         print("\n" + "=" * 102)
         print(f"EVALUATION ON: {label}")
         print("=" * 102)
@@ -189,28 +191,41 @@ def main():
             
             # Shared feature preparation and ML prediction from bake_daily_forecast
             hdf = apply_residual_model(hdf, model, features)
-            
-            # Group per IST calendar day (UTC + 5:30)
-            agg = hdf.groupby('date').agg(
-                coarse_tmax=('temperature_C', 'max'),
-                corr_tmax=('temp_corrected', 'max'),
-                coarse_tmin=('temperature_C', 'min'),
-                corr_tmin=('temp_corrected', 'min'),
-                n_hours=('temperature_C', 'count')
-            ).reset_index()
+            hdf['time_dt'] = pd.to_datetime(hdf['time'])
+            ts_df = hdf.set_index('time_dt').sort_index()
 
-            # Require at least 20 hours per IST calendar day
-            agg = agg[agg['n_hours'] >= 20].copy()
-            agg['ml_offset_tmax'] = np.clip(agg['corr_tmax'] - agg['coarse_tmax'], -2.0, 2.0)
-            agg['ml_offset_tmin'] = np.clip(agg['corr_tmin'] - agg['coarse_tmin'], -2.0, 2.0)
+            # Canonical WMO / IMD daily aggregation windows matching run_temperature_validation.py
+            records = []
+            for d in date_range:
+                d_ts = pd.to_datetime(d)
+                tx_s = d_ts - pd.Timedelta(days=1) + pd.Timedelta(hours=12)
+                tx_e = d_ts + pd.Timedelta(hours=12)
+                tn_s = d_ts - pd.Timedelta(days=1) + pd.Timedelta(hours=3)
+                tn_e = d_ts + pd.Timedelta(hours=3)
+                s_tx = ts_df[(ts_df.index > tx_s) & (ts_df.index <= tx_e)]
+                s_tn = ts_df[(ts_df.index > tn_s) & (ts_df.index <= tn_e)]
+                if len(s_tx) >= 20 and len(s_tn) >= 20:
+                    c_tx = float(s_tx['temperature_C'].max())
+                    c_tn = float(s_tn['temperature_C'].min())
+                    corr_tx = float(s_tx['temp_corrected'].max())
+                    corr_tn = float(s_tn['temp_corrected'].min())
+                    off_tx = float(np.clip(corr_tx - c_tx, -2.0, 2.0))
+                    off_tn = float(np.clip(corr_tn - c_tn, -2.0, 2.0))
+                    p_tx = c_tx + st['station_raster_offset_c']
+                    p_tn = c_tn + st['station_raster_offset_c']
+                    records.append({
+                        'date': str(d),
+                        'physics_tmax': p_tx,
+                        'physics_tmin': p_tn,
+                        'ml_tmax': p_tx + off_tx,
+                        'ml_tmin': p_tn + off_tn,
+                        'ml_offset_tmax': off_tx,
+                        'ml_offset_tmin': off_tn,
+                        'station_name': st['name'],
+                        'station_id': sid
+                    })
 
-            # Station-coord physics and ML predictions
-            agg['physics_tmax'] = agg['coarse_tmax'] + st['station_raster_offset_c']
-            agg['physics_tmin'] = agg['coarse_tmin'] + st['station_raster_offset_c']
-            agg['ml_tmax'] = agg['physics_tmax'] + agg['ml_offset_tmax']
-            agg['ml_tmin'] = agg['physics_tmin'] + agg['ml_offset_tmin']
-            agg['station_name'] = st['name']
-            agg['station_id'] = sid
+            agg = pd.DataFrame(records)
 
             # Load GHCN truth
             ghcn_p = find_or_fetch([
