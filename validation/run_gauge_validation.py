@@ -71,7 +71,10 @@ def main():
         'release/outputs/rain_stations_transect.csv',
         'outputs/rain_stations_transect.csv',
         '../outputs/rain_stations_transect.csv',
-        os.path.join(os.path.dirname(__file__), '..', 'outputs', 'rain_stations_transect.csv')
+        'api/data/rain_stations_transect.csv',
+        '../api/data/rain_stations_transect.csv',
+        os.path.join(os.path.dirname(__file__), '..', 'outputs', 'rain_stations_transect.csv'),
+        os.path.join(os.path.dirname(__file__), '..', 'api', 'data', 'rain_stations_transect.csv')
     ])
     trans_path = find_file([
         'release/outputs/village_transfer.csv',
