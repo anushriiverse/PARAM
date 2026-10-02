@@ -18,6 +18,7 @@ data/cache/*
 !data/cache/d2m_grid.npz
 !data/cache/in_window_daily_extremes.npz
 !data/cache/signed_village_results.json
+!data/cache/srtm_domain_250m.tif
 !data/cache/ghcn_daily/
 data/cache/ghcn_daily/*
 !data/cache/ghcn_daily/IN012131800_parsed.csv
