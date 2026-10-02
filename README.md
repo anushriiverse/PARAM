@@ -17,7 +17,26 @@ Live, orographic weather downscaling engine delivering daily and 7-day panchayat
 | **Temperature ($T_{\text{max}}$)** | Physics lapse rate ($6.5^\circ\text{C}/\text{km}$ on 30 m SRTM) + XGBoost v2 residual ($\pm 2.0^\circ\text{C}$ clamped) | Served via `/api/daily` (`tmax_source: ml_corrected`) | Physics baseline MAE: $1.84^\circ\text{C}$ (ERA5, $N=1,500$), $2.12^\circ\text{C}$ (IFS, $N=605$) (`validation/run_temperature_validation.py`) | Operational 1–7 day forecast error not yet measured; ML offset applied as one diurnal offset per village |
 | **Temperature ($T_{\text{min}}$)** | Environmental lapse rate ($6.5^\circ\text{C}/\text{km}$) on 30 m SRTM | Byte-identical physics baseline across all leads | Physics baseline MAE: $1.05^\circ\text{C}$ (ERA5), $1.19^\circ\text{C}$ (IFS) (`validation/run_temperature_validation.py`) | Nocturnal valley drainage inversion remains unparameterized |
 | **Evapotranspiration ($ET_0$)** | Hargreaves FAO-56 radiation-temperature model | Precomputed daily $ET_0$ (mm/day) per village | Self-contained vectorized extraterrestrial solar radiation ($R_a$) | Direct lysimeter validation |
-| **Agronomy & Soil** | Single-layer soil water balance | **Excluded from public serving & git** | Internal local-only research module | Excluded from production API |
+
+---
+
+## Production design (submitted PPT) vs this prototype
+
+| Feature / Component | Status | Prototype Implementation Details & Citations |
+| :--- | :--- | :--- |
+| **7-day forecast** | Implemented | Live 7-day panchayat forecasts served at [`/api/forecast7`](https://agromet-api.vercel.app/api/forecast7) from [`api/data/village_forecast_7day.csv`](api/data/village_forecast_7day.csv) |
+| **hourly 168-hour output** | Substituted | Prototype computes daily aggregations from 24-hr IFS hourly lattice instead of serving full 168-hr raw arrays; precomputed in [`api/data/village_forecast_7day.csv`](api/data/village_forecast_7day.csv) |
+| **village forecasts** | Implemented | Daily weather served for 16,943 panchayats across KA, MH, GA at [`/api/daily`](https://agromet-api.vercel.app/api/daily) from [`api/data/village_daily.csv`](api/data/village_daily.csv) |
+| **ML residual correction** | Implemented | XGBoost v2 diurnal residual model ([`ml/models/residual_temp_v2.json`](ml/models/residual_temp_v2.json)) applied to $T_{\text{max}}$ with $\pm 2.0^\circ\text{C}$ clamp in [`engine/application/bake_daily_forecast.py`](engine/application/bake_daily_forecast.py); served via [`/api/daily`](https://agromet-api.vercel.app/api/daily) |
+| **physics-only fallback** | Implemented | Physics lapse-rate table [`api/data/village_daily_physics.csv`](api/data/village_daily_physics.csv); instant 1-line switch `SERVE_ML_TEMPERATURE=False` in [`api/main.py`](api/main.py) |
+| **ET0** | Implemented | Hargreaves-Samani potential evapotranspiration computed in [`engine/application/bake_daily_forecast.py`](engine/application/bake_daily_forecast.py) and served in [`api/data/village_daily.csv`](api/data/village_daily.csv) (`et0_hs_mm`) |
+| **humidity and pressure** | Implemented | Relative humidity (`rh_pct`) and surface pressure (`surface_pressure_hpa`) served in [`api/data/village_daily.csv`](api/data/village_daily.csv) and [`/api/daily`](https://agromet-api.vercel.app/api/daily) |
+| **PostgreSQL/TimescaleDB** | Substituted | High-performance in-memory Pandas/CSV tables loaded at cold start ($<10\text{ ms}$) in [`api/main.py`](api/main.py) rather than external relational database cluster |
+| **NDVI/satellite** | Production design (not in prototype) | Planned high-resolution Sentinel-2 / MODIS vegetative index ingestion pipeline for operational deployment |
+| **IMD API** | Substituted | Operational Open-Meteo ECMWF IFS $0.25^\circ$ NWP API used for live boundary forecasts; historical IMD rain gauges used for offline validation |
+| **irrigation/crop advisory and alerts** | Production design (not in prototype) | Agronomic advisory engine, crop growth stages, and threshold alert logic planned for production deployment |
+| **SMS/WhatsApp/IVRS** | Production design (not in prototype) | Multi-channel farmer alert gateway planned for production integration |
+| **Android** | Substituted | Mobile-first responsive React 19 PWA deployed at [`https://agromet-app.vercel.app`](https://agromet-app.vercel.app) (installable on Android homescreen); native Android APK planned for production |
 
 ---
 
