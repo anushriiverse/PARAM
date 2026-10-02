@@ -59,19 +59,19 @@ def fetch_hourly_ifs_if_needed(dates: list, grid_coords: list, cache_path: Path)
     print("      Cache not found. Fetching 7-day hourly IFS from Open-Meteo for 247 nodes...")
     lats_str = ','.join(str(c[0]) for c in grid_coords)
     lons_str = ','.join(str(c[1]) for c in grid_coords)
-    start_date = dates[0]
-    end_date = dates[-1]
+    start_date = (pd.to_datetime(dates[0]) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    end_date = (pd.to_datetime(dates[-1]) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
     url = (
         f"https://api.open-meteo.com/v1/forecast?latitude={lats_str}&longitude={lons_str}"
         f"&hourly=temperature_2m,dewpoint_2m,wind_speed_10m,precipitation,shortwave_radiation"
-        f"&models=ecmwf_ifs025&start_date={start_date}&end_date={end_date}&timezone=auto"
+        f"&models=ecmwf_ifs025&start_date={start_date}&end_date={end_date}&timezone=GMT"
     )
 
     t0 = time.time()
     req = urllib.request.Request(url, headers={'User-Agent': 'AgroMet-Bake/1.0'})
     try:
-        with urllib.request.urlopen(req, timeout=45) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"Open-Meteo returned status {resp.status}")
             data = json.loads(resp.read().decode('utf-8'))
@@ -83,7 +83,7 @@ def fetch_hourly_ifs_if_needed(dates: list, grid_coords: list, cache_path: Path)
         raise ValueError(f"Expected {len(grid_coords)} nodes, got {len(data)}")
 
     all_rows = []
-    n_expected_hours = len(dates) * 24
+    n_expected_hours = len(data[0]['hourly']['time'])
     for i, item in enumerate(data):
         lat_val = grid_coords[i][0]
         lon_val = grid_coords[i][1]
@@ -196,16 +196,16 @@ def bake_forecasts():
     model = XGBRegressor()
     model.load_model(str(model_path))
 
-    # 5. Load or Fetch 7-Day Hourly IFS Data
-    ifs_cache_path = RELEASE_DIR / "data" / "cache" / "ml_temp" / f"ifs_hourly_247_points_{forecast_dates[0].replace('-', '')}.csv"
+    ifs_cache_path = RELEASE_DIR / "data" / "cache" / "ml_temp" / f"ifs_hourly_247_points_gmt_{forecast_dates[0].replace('-', '')}.csv"
     if not ifs_cache_path.exists():
-        ifs_cache_path = ROOT_DIR / "data" / "cache" / "ml_temp" / f"ifs_hourly_247_points_{forecast_dates[0].replace('-', '')}.csv"
+        ifs_cache_path = ROOT_DIR / "data" / "cache" / "ml_temp" / f"ifs_hourly_247_points_gmt_{forecast_dates[0].replace('-', '')}.csv"
 
     df_ifs = fetch_hourly_ifs_if_needed(forecast_dates, grid_coords, ifs_cache_path)
-    df_ifs["time"] = pd.to_datetime(df_ifs["time"])
-    hour = df_ifs["time"].dt.hour
-    doy = df_ifs["time"].dt.dayofyear
-    df_ifs["date"] = df_ifs["time"].dt.strftime("%Y-%m-%d")
+    time_utc = pd.to_datetime(df_ifs["time"])
+    hour_utc = time_utc.dt.hour
+    doy_utc = time_utc.dt.dayofyear
+    # Group into IST calendar days (UTC + 5:30) for daily maximum evaluation
+    df_ifs["date"] = (time_utc + pd.Timedelta(hours=5, minutes=30)).dt.strftime("%Y-%m-%d")
 
     df_ifs["temperature_C"] = df_ifs["temperature_2m"]
     df_ifs["dewpoint_C"] = df_ifs["dewpoint_2m"]
@@ -213,10 +213,10 @@ def bake_forecasts():
     df_ifs["precipitation_m"] = df_ifs["precipitation"] / 1000.0
     df_ifs["solar_radiation_J_m2"] = df_ifs["shortwave_radiation"] * 3600.0
 
-    df_ifs["hour_sin"] = np.sin(2 * np.pi * hour / 24.0)
-    df_ifs["hour_cos"] = np.cos(2 * np.pi * hour / 24.0)
-    df_ifs["doy_sin"] = np.sin(2 * np.pi * doy / 365.25)
-    df_ifs["doy_cos"] = np.cos(2 * np.pi * doy / 365.25)
+    df_ifs["hour_sin"] = np.sin(2 * np.pi * hour_utc / 24.0)
+    df_ifs["hour_cos"] = np.cos(2 * np.pi * hour_utc / 24.0)
+    df_ifs["doy_sin"] = np.sin(2 * np.pi * doy_utc / 365.25)
+    df_ifs["doy_cos"] = np.cos(2 * np.pi * doy_utc / 365.25)
 
     # Unit assertion
     min_w = float(df_ifs["wind_speed_ms"].min())

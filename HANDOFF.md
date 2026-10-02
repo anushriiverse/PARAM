@@ -25,7 +25,7 @@ Live deployments:
 ### Served Components:
 1. **Frontend (`app/`)**: Client PWA displaying live downscaled weather, orographic precipitation bands, temperature extremes, and interactive radar/map overlays.
 2. **Backend (`api/`)**: High-performance FastAPI server delivering nearest-neighbor geospatial lookups in $< 10\text{ ms}$ cold start from committed CSV tables.
-3. **Data (`api/data/`)**: Self-contained tables (`village_serving.csv`, `village_daily.csv`, `village_daily_ml.csv`, `village_daily_physics.csv`, `village_forecast_7day.csv`). Contains no soil or bucket columns.
+3. **Data (`api/data/`)**: Self-contained tables (`village_serving.csv`, `village_daily.csv`, `village_daily_ml.csv`, `village_daily_physics.csv`, `village_forecast_7day.csv`). Contains pure meteorological columns with zero unverified agronomic fields.
 
 ---
 
