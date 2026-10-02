@@ -50,6 +50,43 @@ def compute_ra_vector(lats_deg: np.ndarray, day_of_year: int) -> np.ndarray:
     return ra
 
 
+def prepare_ml_features(df_hourly: pd.DataFrame) -> pd.DataFrame:
+    """Prepares ML features using UTC diurnal harmonics and groups by IST calendar day."""
+    df = df_hourly.copy()
+    time_utc = pd.to_datetime(df["time"])
+    hour_utc = time_utc.dt.hour
+    doy_utc = time_utc.dt.dayofyear
+    # Group into IST calendar days (UTC + 5:30) for daily maximum evaluation
+    df["date"] = (time_utc + pd.Timedelta(hours=5, minutes=30)).dt.strftime("%Y-%m-%d")
+
+    df["temperature_C"] = df["temperature_2m"]
+    df["dewpoint_C"] = df["dewpoint_2m"]
+    df["wind_speed_ms"] = df["wind_speed_10m"]  # Open-Meteo km/h matches training scale
+    df["precipitation_m"] = df["precipitation"] / 1000.0
+    df["solar_radiation_J_m2"] = df["shortwave_radiation"] * 3600.0
+
+    df["hour_sin"] = np.sin(2 * np.pi * hour_utc / 24.0)
+    df["hour_cos"] = np.cos(2 * np.pi * hour_utc / 24.0)
+    df["doy_sin"] = np.sin(2 * np.pi * doy_utc / 365.25)
+    df["doy_cos"] = np.cos(2 * np.pi * doy_utc / 365.25)
+    return df
+
+
+def apply_residual_model(df_hourly: pd.DataFrame, model, features: list) -> pd.DataFrame:
+    """Evaluates ML model with hard +/-2.0 C clamp and produces corrected temperature series."""
+    df = prepare_ml_features(df_hourly)
+    min_w = float(df["wind_speed_ms"].min())
+    max_w = float(df["wind_speed_ms"].max())
+    assert 0.0 <= min_w and max_w <= 150.0, f"Wind speed range [{min_w}, {max_w}] violates [0, 150] km/h."
+
+    raw_residuals = model.predict(df[features])
+    df["pred_residual_raw"] = raw_residuals
+    clamped_residuals = np.clip(raw_residuals, -2.0, 2.0)
+    df["pred_residual_clamped"] = clamped_residuals
+    df["temp_corrected"] = df["temperature_C"] + clamped_residuals
+    return df
+
+
 def fetch_hourly_ifs_if_needed(dates: list, grid_coords: list, cache_path: Path) -> pd.DataFrame:
     """Fetches hourly IFS data for 247 nodes across dates if cache not present."""
     if cache_path.exists():
@@ -201,34 +238,7 @@ def bake_forecasts():
         ifs_cache_path = ROOT_DIR / "data" / "cache" / "ml_temp" / f"ifs_hourly_247_points_gmt_{forecast_dates[0].replace('-', '')}.csv"
 
     df_ifs = fetch_hourly_ifs_if_needed(forecast_dates, grid_coords, ifs_cache_path)
-    time_utc = pd.to_datetime(df_ifs["time"])
-    hour_utc = time_utc.dt.hour
-    doy_utc = time_utc.dt.dayofyear
-    # Group into IST calendar days (UTC + 5:30) for daily maximum evaluation
-    df_ifs["date"] = (time_utc + pd.Timedelta(hours=5, minutes=30)).dt.strftime("%Y-%m-%d")
-
-    df_ifs["temperature_C"] = df_ifs["temperature_2m"]
-    df_ifs["dewpoint_C"] = df_ifs["dewpoint_2m"]
-    df_ifs["wind_speed_ms"] = df_ifs["wind_speed_10m"]  # Open-Meteo km/h matches training scale
-    df_ifs["precipitation_m"] = df_ifs["precipitation"] / 1000.0
-    df_ifs["solar_radiation_J_m2"] = df_ifs["shortwave_radiation"] * 3600.0
-
-    df_ifs["hour_sin"] = np.sin(2 * np.pi * hour_utc / 24.0)
-    df_ifs["hour_cos"] = np.cos(2 * np.pi * hour_utc / 24.0)
-    df_ifs["doy_sin"] = np.sin(2 * np.pi * doy_utc / 365.25)
-    df_ifs["doy_cos"] = np.cos(2 * np.pi * doy_utc / 365.25)
-
-    # Unit assertion
-    min_w = float(df_ifs["wind_speed_ms"].min())
-    max_w = float(df_ifs["wind_speed_ms"].max())
-    assert 0.0 <= min_w and max_w <= 150.0, f"Wind speed range [{min_w}, {max_w}] violates [0, 150] km/h."
-
-    # ML Inference across all hourly records
-    raw_residuals = model.predict(df_ifs[features])
-    df_ifs["pred_residual_raw"] = raw_residuals
-    clamped_residuals = np.clip(raw_residuals, -2.0, 2.0)
-    df_ifs["pred_residual_clamped"] = clamped_residuals
-    df_ifs["temp_corrected"] = df_ifs["temperature_C"] + clamped_residuals
+    df_ifs = apply_residual_model(df_ifs, model, features)
 
     # Compute node offsets and map to villages per forecast date
     lead_offsets = {}

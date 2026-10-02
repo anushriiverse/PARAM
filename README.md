@@ -36,13 +36,18 @@ CANONICAL PERFORMANCE METRICS (VERIFIED BY COMMITTED SCRIPTS)
    - Leeward Median APE:      32.03 %  (N=7 stations, rain-shadow plain)
    - Mass Conservation Error:  < 1e-15 mm/cell (exact area-weighted parent preservation)
 
-2. TEMPERATURE DOWNSCALING (Script: validation/run_temperature_validation.py)
+2. TEMPERATURE PHYSICS BASELINE (Script: validation/run_temperature_validation.py)
    - Truth Source: NOAA GHCN daily surface stations (Binaga, Honavar, Medakeripura)
    - Physics Baseline MAE (ERA5, N=1,500 station-days): 1.84 °C (Tmax), 1.05 °C (Tmin)
    - Physics Baseline MAE (ECMWF IFS, N=605 station-days): 2.12 °C (Tmax), 1.19 °C (Tmin)
-   - ML-Corrected Tmax: Offline benchmark research showed 1.56 °C (ERA5) and 1.53 °C (IFS);
-     applied operationally with hard ±2.0 °C clamp; 1-7 day operational forecast error
-     is not yet measured across multi-station operational networks.
+
+3. ML RESIDUAL TEMPERATURE CORRECTION (Script: validation/run_ml_validation.py)
+   - Truth Source: NOAA GHCN daily surface stations (Karwar, Honavar, Chitradurga; 100% spatial holdouts)
+   - Physics Baseline MAE:     1.85 °C (ERA5, N=1,497) | 2.16 °C (ECMWF IFS, N=605)
+   - Physics + ML (v2) MAE:    1.56 °C (ERA5, N=1,497) | 1.54 °C (ECMWF IFS, N=605)
+   - Statistically Significant: Paired diff -0.29 °C (ERA5, 95% CI [-0.35, -0.24]), -0.61 °C (IFS, 95% CI [-0.70, -0.52])
+   - Operational Serving:      Applied to Tmax only with hard ±2.0 °C clamp; Tmin stays pure physics (ML degrades Tmin by +0.09 to +0.16 °C);
+                               1-7 day operational forecast error is unmeasured.
 ========================================================================================
 ```
 
