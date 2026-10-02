@@ -13,7 +13,7 @@ Live, orographic weather downscaling engine delivering daily and 7-day panchayat
 
 | Subsystem | Methodology | Live Serving Scope | Offline Benchmark Scope (Committed Scripts) | Unmeasured / Disclaimed |
 | :--- | :--- | :--- | :--- | :--- |
-| **Rainfall** | BCSD orographic disaggregation ($0.25^\circ \rightarrow 0.05^\circ$) with mass conservation | 7-day leads ($N=16,943$ villages) served via `/api/daily` & `/api/forecast7` | Median APE 12.35% across 17 served-village gauges (`validation/run_gauge_validation.py`) | Gauges outside validated Western Ghats domain band ($12.8^\circ\text{–}15.3^\circ\text{N}$) |
+| **Rainfall** | BCSD orographic disaggregation ($0.25^\circ \rightarrow 0.05^\circ$) with mass conservation | 7-day leads ($N=16,943$ villages) served via `/api/daily` & `/api/forecast7` | Median APE 13.27% across 17 served-village gauges (`validation/run_gauge_validation.py`) | Gauges outside validated Western Ghats domain band ($12.8^\circ\text{–}15.3^\circ\text{N}$) |
 | **Temperature ($T_{\text{max}}$)** | Physics lapse rate ($6.5^\circ\text{C}/\text{km}$ on 30 m SRTM) + XGBoost v2 residual ($\pm 2.0^\circ\text{C}$ clamped) | Served via `/api/daily` (`tmax_source: ml_corrected`) | Physics baseline MAE: $1.840^\circ\text{C}$ (ERA5, $N=1,500$), $2.122^\circ\text{C}$ (IFS, $N=605$); ML: $1.555^\circ\text{C}$ (ERA5), $1.531^\circ\text{C}$ (IFS) (`validation/run_ml_validation.py`) | Operational 1–7 day forecast error not yet measured; ML offset applied as one diurnal offset per village |
 | **Temperature ($T_{\text{min}}$)** | Environmental lapse rate ($6.5^\circ\text{C}/\text{km}$) on 30 m SRTM | Byte-identical physics baseline across all leads | Physics baseline MAE: $1.055^\circ\text{C}$ (ERA5, $N=1,500$), $1.188^\circ\text{C}$ (IFS, $N=605$) (`validation/run_temperature_validation.py`) | Nocturnal valley drainage inversion remains unparameterized; ML degrades Tmin |
 | **Evapotranspiration ($ET_0$)** | Hargreaves FAO-56 radiation-temperature model | Precomputed daily $ET_0$ (mm/day) per village | Self-contained vectorized extraterrestrial solar radiation ($R_a$) | Direct lysimeter validation |
@@ -60,20 +60,20 @@ CANONICAL PERFORMANCE METRICS (VERIFIED BY COMMITTED SCRIPTS)
      Agumbe Obsy (IN009183600) merged to single village ka.geojson:5921 (mean obs: 6,911.6 mm) -> Headline N=17.
    - Headline Metrics (Chitradurga Excluded, Agumbe Merged, N=17):
      * Windward / Crest (N=10):
-       - σ=0 km (Base):  Median APE = 7.57%, Mean MAE = 642.5 mm | Count >25%: 1/10
-       - σ=20 km (Disp): Median APE = 7.57%, Mean MAE = 642.5 mm | Count >25%: 1/10
+       - σ=0 km (Base):  Median APE = 5.84%, Mean MAE = 642.7 mm | Count >25%: 1/10
+       - σ=20 km (Disp): Median APE = 5.84%, Mean MAE = 642.7 mm | Count >25%: 1/10
      * Lee Side (N=7):
-       - σ=0 km (Base):  Median APE = 28.04%, Mean MAE = 560.9 mm | Count >25%: 5/7
-       - σ=20 km (Disp): Median APE = 19.92%, Mean MAE = 466.8 mm | Count >25%: 3/7
+       - σ=0 km (Base):  Median APE = 31.22%, Mean MAE = 590.9 mm | Count >25%: 5/7
+       - σ=20 km (Disp): Median APE = 22.92%, Mean MAE = 496.1 mm | Count >25%: 3/7
      * Pooled (N=17):
-       - σ=0 km (Base):  Median APE = 12.35%, Mean MAE = 608.9 mm | Count >25%: 6/17
-       - σ=20 km (Disp): Median APE = 12.35%, Mean MAE = 570.1 mm | Count >25%: 4/17
-     * Lateral Dispersion Transition (σ=0 -> σ=20 km): Improved = 6, Unchanged = 10, Degraded = 1 (Thirthahalli 0.50% -> 19.81%)
+       - σ=0 km (Base):  Median APE = 13.27%, Mean MAE = 621.4 mm | Count >25%: 6/17
+       - σ=20 km (Disp): Median APE = 13.27%, Mean MAE = 582.4 mm | Count >25%: 4/17
+     * Lateral Dispersion Transition (σ=0 -> σ=20 km): Improved = 6, Unchanged = 10, Degraded = 1 (Thirthahalli 4.36% -> 22.92%)
    - Note on Spread: Medians hide wide gauge-level spread:
-     Underpredicted crest/lee stations include Chickmagalur (61.44% APE at σ=20 km), Hulikal (53.13%), Sagar (41.46%), and Hosanagar (33.05%).
+     Underpredicted crest/lee stations include Chickmagalur (64.32% APE at σ=20 km), Hulikal (52.77%), Sagar (41.51%), and Hosanagar (30.34%).
    - Mass Conservation:
-     * Algorithm Level (Exact): Theoretical area-weighted conservation Δ = 0.0 mm/cell across all cells when ratios normalized.
-     * Served Rounded Values: Worst-cell deviation is 0.5273 mm (unrounded) and 0.5277 mm (served 2-decimal rounded) at cell (15.0°N, 75.25°E) on 2026-10-05 due to unnormalized village transfer ratios.
+     * Algorithm Level (Exact): Theoretical area-weighted conservation Δ = 0.0 mm/cell (unrounded error < 1e-14 mm/cell across all cells and leads).
+     * Served Rounded Values: Worst-cell deviation across 7 days is 0.0033 mm (at cell 15.5°N, 76.5°E on 2026-10-05, P_cell=6.9 mm), strictly within 2-decimal rounding quantization (< 0.005 mm).
 
 2. TEMPERATURE PHYSICS BASELINE (Script: validation/run_temperature_validation.py)
    - Truth Source: NOAA GHCN daily surface stations (Karwar, Honavar, Chitradurga; 100% spatial holdouts)
