@@ -322,8 +322,11 @@ def model_info():
     return {
         "rainfall": {
             "canonical_median_ape_pct": 13.27,
+            "canonical_mean_mae_mm": 582.4,
             "windward_median_ape_pct": 5.84,
+            "windward_mean_mae_mm": 642.7,
             "leeward_median_ape_pct": 22.92,
+            "leeward_mean_mae_mm": 496.1,
             "n_gauges": 17,
             "domain_band": "12.8-15.3N",
             "n_villages_in_band": 8634,

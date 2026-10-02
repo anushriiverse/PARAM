@@ -71,9 +71,9 @@ CANONICAL PERFORMANCE METRICS (VERIFIED BY COMMITTED SCRIPTS)
      * Lateral Dispersion Transition (σ=0 -> σ=20 km): Improved = 6, Unchanged = 10, Degraded = 1 (Thirthahalli 4.36% -> 22.92%)
    - Note on Spread: Medians hide wide gauge-level spread:
      Underpredicted crest/lee stations include Chickmagalur (64.32% APE at σ=20 km), Hulikal (52.77%), Sagar (41.51%), and Hosanagar (30.34%).
-   - Mass Conservation:
-     * Algorithm Level (Exact): Theoretical area-weighted conservation Δ = 0.0 mm/cell (unrounded error < 1e-14 mm/cell across all cells and leads).
-     * Served Rounded Values: Worst-cell deviation across 7 days is 0.0033 mm (at cell 15.5°N, 76.5°E on 2026-10-05, P_cell=6.9 mm), strictly within 2-decimal rounding quantization (< 0.005 mm).
+   - Mass Conservation (Regression Test: tests/test_conservation.py):
+     * Algorithm Level (Exact): Theoretical area-weighted conservation Δ = 0.0 mm/cell (measured 4.44e-16 ratio error, unrounded error 4.44e-15 mm/cell at P_cell=10.0 mm; assert error < 1e-12).
+     * Served Rounded Values: Worst-cell deviation across all 7 leads is 0.0033 mm (at Lead 5, cell 15.5°N, 76.5°E on 2026-10-05, P_cell=6.9 mm), strictly within 2-decimal rounding quantization (< 0.005 mm). Per-lead worst deviations: Lead 1: 0.0013 mm, Lead 2: 0.0023 mm, Lead 3: 0.0012 mm, Lead 4: 0.0023 mm, Lead 5: 0.0033 mm, Lead 6: 0.0031 mm, Lead 7: 0.0012 mm.
 
 2. TEMPERATURE PHYSICS BASELINE (Script: validation/run_temperature_validation.py)
    - Truth Source: NOAA GHCN daily surface stations (Karwar, Honavar, Chitradurga; 100% spatial holdouts)
@@ -153,7 +153,7 @@ npm run build
 - **ECMWF IFS & ERA5**: Coarse meteorological drivers obtained via Open-Meteo API.
 - **NOAA GHCN-Daily**: In-situ daily temperature and precipitation observations (Public Domain).
 - **SRTM 30m DEM**: NASA / USGS Shuttle Radar Topography Mission elevation model (Public Domain).
-- **Rain Gauges**: KSNDMC & IMD daily monsoon rainfall records across Western Ghats transects.
+- **Rain Gauges Transect** (`outputs/rain_stations_transect.csv` / `api/data/rain_stations_transect.csv`): 20 historical IMD rain gauge stations across Karnataka and Maharashtra Western Ghats (19 in Karnataka transect, 17 headline). Climatological JJAS normals derived from historical IMD archives spanning up to 70–125 observation years (most active records 1901–1970).
 - **Maharashtra AWS Station Data** (`data/cache/ml_temp/clean_training_data.csv`): Maharashtra NWDP AWS network (National Water Development Programme, Agriculture Dept., Govt. of Maharashtra; stations: Aurangpur [2023], Bhatsanagar_1 [2024], Natuwadi Dam_1 [2024]).
 
 ---
