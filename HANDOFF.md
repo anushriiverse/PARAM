@@ -53,7 +53,7 @@ Set `SERVE_ML_TEMPERATURE = False` in `api/main.py` and restart/redeploy. The ba
 
 | Feature | Production Status | Source of Truth / Verification |
 | :--- | :--- | :--- |
-| **Orographic Rain (7-day)** | Live on `/api/daily` & `/api/forecast7` | 13.27% median APE (mean MAE 582.4 mm) via `validation/run_gauge_validation.py` |
+| **Orographic Rain (7-day)** | Live on `/api/daily` & `/api/forecast7` | 13.27% median APE (mean MAE 582.4 mm) via `validation/run_gauge_validation.py` (same ratio field and fitted constants as the served product, evaluated as a June-September seasonal total at the village containing each gauge) |
 | **Physics Lapse Rate** | Live fallback for $T_{\text{max}}$, active for $T_{\text{min}}$ | $1.840^\circ\text{C}$ ERA5 / $2.122^\circ\text{C}$ IFS via `validation/run_temperature_validation.py` |
 | **ML $T_{\text{max}}$ Correction** | Live on `/api/daily` & `/api/forecast7` (clamped $\pm 2.0^\circ\text{C}$) | $1.555^\circ\text{C}$ ERA5 ($N=1,500$) / $1.531^\circ\text{C}$ IFS ($N=605$) via `validation/run_ml_validation.py`; 1–7 day operational error unmeasured |
 
