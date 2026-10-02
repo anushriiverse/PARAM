@@ -212,6 +212,19 @@ def bake_forecasts():
         raise FileNotFoundError(f"Transfer stencil {transfer_path} not found.")
     df_transfer = pd.read_csv(transfer_path)
 
+    # Enforce exact per-cell mass conservation via polygon-area-weighted renormalization
+    corr_candidates = [
+        RELEASE_DIR / "outputs" / "village_corrections.csv",
+        ROOT_DIR / "outputs" / "village_corrections.csv"
+    ]
+    corr_path = next(p for p in corr_candidates if p.exists())
+    df_corr = pd.read_csv(corr_path, low_memory=False)
+    from engine.application.disaggregation import renormalize_cell_ratios, audit_cell_mass_conservation
+    df_transfer = renormalize_cell_ratios(df_transfer, df_corr)
+    df_transfer.to_csv(transfer_path, index=False)
+    if ROOT_DIR != RELEASE_DIR and (ROOT_DIR / "outputs" / "village_transfer.csv").exists():
+        df_transfer.to_csv(ROOT_DIR / "outputs" / "village_transfer.csv", index=False)
+
     # 3. Setup Lattice Grid & Village Mapping
     lats_arr = np.arange(13.0, 17.51, 0.25)
     lons_arr = np.arange(73.5, 76.51, 0.25)
@@ -349,6 +362,8 @@ def bake_forecasts():
         all_7day_rows.append(df_lead)
 
     df_7day = pd.concat(all_7day_rows, ignore_index=True)
+    worst_mc_err, mean_mc_err, _ = audit_cell_mass_conservation(df_7day, df_corr, ratio_col='effective_ratio')
+    print(f"      Exact Cell Mass Conservation: worst error = {worst_mc_err:.2e}, mean error = {mean_mc_err:.2e}")
     out_7day_api = RELEASE_DIR / "api" / "data" / "village_forecast_7day.csv"
     out_7day_outputs = RELEASE_DIR / "outputs" / "village_forecast_7day.csv"
     df_7day.to_csv(out_7day_api, index=False)

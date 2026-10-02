@@ -53,7 +53,7 @@ Set `SERVE_ML_TEMPERATURE = False` in `api/main.py` and restart/redeploy. The ba
 
 | Feature | Production Status | Source of Truth / Verification |
 | :--- | :--- | :--- |
-| **Orographic Rain (7-day)** | Live on `/api/daily` & `/api/forecast7` | 12.35% median APE via `validation/run_gauge_validation.py` |
+| **Orographic Rain (7-day)** | Live on `/api/daily` & `/api/forecast7` | 13.27% median APE via `validation/run_gauge_validation.py` |
 | **Physics Lapse Rate** | Live fallback for $T_{\text{max}}$, active for $T_{\text{min}}$ | $1.840^\circ\text{C}$ ERA5 / $2.122^\circ\text{C}$ IFS via `validation/run_temperature_validation.py` |
 | **ML $T_{\text{max}}$ Correction** | Live on `/api/daily` & `/api/forecast7` (clamped $\pm 2.0^\circ\text{C}$) | $1.555^\circ\text{C}$ ERA5 ($N=1,500$) / $1.531^\circ\text{C}$ IFS ($N=605$) via `validation/run_ml_validation.py`; 1–7 day operational error unmeasured |
 
@@ -65,7 +65,7 @@ Set `SERVE_ML_TEMPERATURE = False` in `api/main.py` and restart/redeploy. The ba
 ========================================================================================
 CANONICAL MEASUREMENTS (FROM COMMITTED SCRIPTS)
 ========================================================================================
-- Rainfall Accuracy:      12.35 % Median APE (N=17 served-village rain gauges; windward 7.57%, lee 19.92%)
+- Rainfall Accuracy:      13.27 % Median APE (N=17 served-village rain gauges; windward 5.84%, lee 22.92%)
                           Script: validation/run_gauge_validation.py
 - Physics Tmax MAE:       1.840 °C (ERA5, N=1,500) | 2.122 °C (ECMWF IFS, N=605)
                           Script: validation/run_temperature_validation.py

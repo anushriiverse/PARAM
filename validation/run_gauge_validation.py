@@ -311,7 +311,9 @@ def main():
     print(f"  σ=0 km (Base):  Median APE = {df_headline['ape_0'].median():.2f}%, Mean MAE = {df_headline['ae_0'].mean():.1f} mm | Count >25%: {c25_0}/17")
     print(f"  σ=20 km (Disp): Median APE = {df_headline['ape_20'].median():.2f}%, Mean MAE = {df_headline['ae_20'].mean():.1f} mm | Count >25%: {c25_20}/17")
     print(f"\nPer-Gauge Lateral Dispersion Transition (σ=0 -> σ=20 km across N=17):")
-    print(f"  Improved: {improved} | Unchanged: {unchanged} | Degraded: {degraded} (Thirthahalli 0.50% -> 19.81%)")
+    deg_names = df_headline[df_headline['ape_20'] > df_headline['ape_0'] + 0.01]
+    deg_str = ", ".join([f"{r['name'].strip()} {r['ape_0']:.2f}% -> {r['ape_20']:.2f}%" for _, r in deg_names.iterrows()])
+    print(f"  Improved: {improved} | Unchanged: {unchanged} | Degraded: {degraded} ({deg_str})")
 
     # Separate Chitradurga fitted-parameter sanity check
     chit = df_19[df_19['id'] == 'IN009070100'].iloc[0]
